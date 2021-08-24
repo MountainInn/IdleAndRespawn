@@ -16,7 +16,7 @@ public class KredGoods : MonoBehaviour
 
     Pool<KredGoodView> kredGoodPool;
 
-    KredGood
+    KredVendible
         hereditaryEquipment,
         combatTraining ,
         wardAgainstEvil ;
@@ -83,20 +83,17 @@ public class KredGoods : MonoBehaviour
         [JsonPropertyAttribute]
         public bool isOwned;
 
+        public OneTimeVendible()
+        {
+            onBought += ()=>{ isOwned = true; };
+        }
+
         [OnDeserializedAttribute]
         public void OnDeserialized(StreamingContext streamingContext)
         {
-            if (isOwned) OnBought();
-        }
-
-        override public void Buy(Currency currency)
-        {
-            if (CanBuy(currency))
+            if (isOwned)
             {
-                isOwned = true; // Добавить установку флага
-
                 OnBought();
-
                 onBought?.Invoke();
             }
         }
@@ -107,32 +104,32 @@ public class KredGoods : MonoBehaviour
         }
     }
 
-    abstract public class KredGood : OneTimeVendible
+    abstract public class KredVendible : OneTimeVendible
     {
         public string name, description;
         public Sprite icon;
 
-        public KredGood SetIcon(Sprite icon)
+        public KredVendible SetIcon(Sprite icon)
         {
             this.icon = icon;
             return this;
         }
 
-        public KredGood(string name, string description, int price)
+        public KredVendible(string name, string description, int price)
         {
             this.name = name; this.description = description; this.price = price;
         }
     }
 
 
-    abstract public class ArmorDamageMultiplierKredGood : KredGood
+    abstract public class ArmorDamageMultiplierKredVendible : KredVendible
     {
         protected const float mult = 1;
 
         ArithmeticNode armorMult, damageMult;
         Unit unit ;
 
-        protected ArmorDamageMultiplierKredGood(Unit unit, string unitName, string goodName, int price)
+        protected ArmorDamageMultiplierKredVendible(Unit unit, string unitName, string goodName, int price)
             : base($"{goodName}",
                    $"{unitName}'s armour x{mult:F2}\n"+
                    $"{unitName}'s damage x{mult:F2}",
@@ -152,21 +149,21 @@ public class KredGoods : MonoBehaviour
     }
 
 
-    public class HereditaryEquipment : ArmorDamageMultiplierKredGood
+    public class HereditaryEquipment : ArmorDamageMultiplierKredVendible
     {
         new const float mult = 1.25f;
 
         public HereditaryEquipment() : base(Hero._Inst, "Hero", "Hereditary Equipment", 100) {}
     }
 
-    public class CombatTraining : ArmorDamageMultiplierKredGood
+    public class CombatTraining : ArmorDamageMultiplierKredVendible
     {
         new const float mult = 1.25f;
 
         public CombatTraining() : base(Followers._Inst, "Followers", "Combat Training", 100) {}
     }
 
-    public class WardAgainstEvil : ArmorDamageMultiplierKredGood
+    public class WardAgainstEvil : ArmorDamageMultiplierKredVendible
     {
         new const float mult = .75f;
 
