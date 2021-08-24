@@ -1,0 +1,377 @@
+{"Hero":{
+  "perseverance": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 0.0
+    },
+    "growth": {
+      "mutation": 1.0,
+      "val": 1.0
+    },
+    "limit": null,
+    "cost": 100000.0
+  },
+  "loyalty": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 0.0
+    },
+    "growth": {
+      "mutation": 1.0,
+      "val": 1.0
+    },
+    "limit": null,
+    "cost": 2000.0
+  },
+  "healthRange": {
+    "_Max": 200.0,
+    "_Val": 200.0
+  },
+  "damage": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 3.0
+    },
+    "growth": {
+      "mutation": 1.0,
+      "val": 4.0
+    },
+    "limit": null,
+    "cost": 0.5
+  },
+  "critChance": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 0.02
+    },
+    "growth": {
+      "mutation": 0.01,
+      "val": 0.03
+    },
+    "limit": {
+      "mutation": 1.0,
+      "val": 0.03
+    },
+    "cost": 50.0
+  },
+  "critMult": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 1.2
+    },
+    "growth": {
+      "mutation": 0.01,
+      "val": 1.21
+    },
+    "limit": {
+      "mutation": 1.5,
+      "val": 1.21
+    },
+    "cost": 50.0
+  },
+  "reflect": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 0.05
+    },
+    "growth": {
+      "mutation": 0.01,
+      "val": 0.0600000024
+    },
+    "limit": null,
+    "cost": 50.0
+  },
+  "armor": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 4.0
+    },
+    "growth": {
+      "mutation": 10.0,
+      "val": 14.0
+    },
+    "limit": null,
+    "cost": 5.0
+  },
+  "health": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 100.0
+    },
+    "growth": {
+      "mutation": 100.0,
+      "val": 200.0
+    },
+    "limit": null,
+    "cost": 60.0
+  },
+  "healing": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 5.0
+    },
+    "growth": {
+      "mutation": 5.0,
+      "val": 10.0
+    },
+    "limit": null,
+    "cost": 5.0
+  },
+  "healSpeed": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 4.0
+    },
+    "growth": {
+      "mutation": 0.0,
+      "val": 4.0
+    },
+    "limit": null,
+    "cost": 0.0
+  },
+  "vampirism": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 0.1
+    },
+    "growth": {
+      "mutation": 0.035,
+      "val": 0.135
+    },
+    "limit": null,
+    "cost": 40.0
+  },
+  "attackSpeed": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 2.0
+    },
+    "growth": {
+      "mutation": 0.0,
+      "val": 2.0
+    },
+    "limit": null,
+    "cost": 0.0
+  }
+},"Boss":{
+  "shieldPutUp": false,
+  "multOne": 1.0,
+  "multTwo": 1.0,
+  "damageMult": {
+    "mutation": 0.25,
+    "val": 2.5
+  },
+  "armorMult": {
+    "mutation": 0.25,
+    "val": 2.5
+  },
+  "reflectMult": {
+    "mutation": 0.25,
+    "val": 0.0025
+  },
+  "healthRange": {
+    "_Max": 100000.0,
+    "_Val": 100000.0
+  },
+  "damage": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 10.0
+    },
+    "growth": {
+      "mutation": 0.0,
+      "val": 10.0
+    },
+    "limit": null,
+    "cost": 0.0
+  },
+  "critChance": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 0.0
+    },
+    "growth": {
+      "mutation": 0.0,
+      "val": 0.0
+    },
+    "limit": null,
+    "cost": 50.0
+  },
+  "critMult": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 1.5
+    },
+    "growth": {
+      "mutation": 0.01,
+      "val": 1.51
+    },
+    "limit": null,
+    "cost": 50.0
+  },
+  "reflect": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 0.01
+    },
+    "growth": {
+      "mutation": 0.0,
+      "val": 0.01
+    },
+    "limit": null,
+    "cost": 0.0
+  },
+  "armor": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 10.0
+    },
+    "growth": {
+      "mutation": 0.0,
+      "val": 10.0
+    },
+    "limit": null,
+    "cost": 0.0
+  },
+  "health": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 100000.0
+    },
+    "growth": {
+      "mutation": 0.0,
+      "val": 100000.0
+    },
+    "limit": null,
+    "cost": 0.0
+  },
+  "healing": null,
+  "healSpeed": null,
+  "vampirism": null,
+  "attackSpeed": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 5.0
+    },
+    "growth": {
+      "mutation": 0.0,
+      "val": 5.0
+    },
+    "limit": null,
+    "cost": 0.0
+  },
+  "_StageNumber": 1
+},"Followers":{
+  "healthRange": {
+    "_Max": 530.0,
+    "_Val": 530.0
+  },
+  "damage": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 1.0
+    },
+    "growth": {
+      "mutation": 10.0,
+      "val": 11.0
+    },
+    "limit": null,
+    "cost": 5.0
+  },
+  "critChance": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 0.01
+    },
+    "growth": {
+      "mutation": 0.01,
+      "val": 0.02
+    },
+    "limit": null,
+    "cost": 50.0
+  },
+  "critMult": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 1.2
+    },
+    "growth": {
+      "mutation": 0.01,
+      "val": 1.21
+    },
+    "limit": null,
+    "cost": 50.0
+  },
+  "reflect": null,
+  "armor": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 0.0
+    },
+    "growth": {
+      "mutation": 1.0,
+      "val": 1.0
+    },
+    "limit": null,
+    "cost": 5.0
+  },
+  "health": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 200.0
+    },
+    "growth": {
+      "mutation": 30.0,
+      "val": 230.0
+    },
+    "limit": null,
+    "cost": 60.0
+  },
+  "healing": null,
+  "healSpeed": null,
+  "vampirism": null,
+  "attackSpeed": {
+    "level": 1,
+    "basevalue": {
+      "mutation": 0.0,
+      "val": 3.5
+    },
+    "growth": {
+      "mutation": 0.0,
+      "val": 3.5
+    },
+    "limit": null,
+    "cost": 0.0
+  }
+},"SoftReset":{
+  "lastReset": 0.0,
+  "maxStage": 1,
+  "lastStage": 1
+},"Phases":{
+  "$type": "Phases, Assembly-CSharp",
+  "allActiveTalents": []
+}}
