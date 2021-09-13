@@ -2,11 +2,15 @@ using UnityEngine;
 using System;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
+using UnityEngine.UI;
 
 [JsonObjectAttribute(MemberSerialization.OptIn)]
 public class Advertisement : MonoBehaviour
 {
-    public Action onWatched, onReady;
+    static Advertisement inst;
+    static public Advertisement _Inst => inst??=GameObject.FindObjectOfType<Advertisement>();
+
+    static public Action onWatched, onReady;
 
     [JsonPropertyAttribute, HideInInspector]
     public Timer cooldown;
@@ -17,11 +21,22 @@ public class Advertisement : MonoBehaviour
     protected void Awake()
     {
         cooldown = new Timer(10);
-        cooldown.t = cooldown.endTime;
+        cooldown.T = cooldown.endTime;
 
         onWatched += () =>{ cooldown.Reset(); };
 	}
 
+    void Start()
+    {
+        /// Засчитать просмотр рекламы без просмотра рекламы
+        GetComponentInChildren<Button>().onClick.AddListener(AdWatched);
+    }
+
+    public void AdWatched()
+    {
+        Debug.Log("AdWATCHED");
+        onWatched?.Invoke();
+    }
 
     protected void Update()
     {

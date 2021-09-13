@@ -1,11 +1,23 @@
 using System;
 using UnityEngine;
+using Newtonsoft.Json;
+using System.Runtime.Serialization;
 
+[JsonObjectAttribute(MemberSerialization.OptIn)]
 public class Currency
 {
+    [JsonPropertyAttribute]
     float val;
 
-    public event Action<float> onChanged;
+    [OnDeserializedAttribute]
+    public void OnDeserialized(StreamingContext context)
+    {
+        onChanged?.Invoke();;
+    }
+
+
+    public event Action<float> onChanged_Amount;
+    public event Action onChanged;
 
     public float _Val
     {
@@ -27,14 +39,16 @@ public class Currency
     {
         _Val += earnings;
 
-        onChanged?.Invoke(earnings);
+        onChanged_Amount?.Invoke(earnings);
+        onChanged?.Invoke();
     }
 
     public void Spend(float spend)
     {
         _Val -= spend;
 
-        onChanged?.Invoke(-spend);
+        onChanged_Amount?.Invoke(-spend);
+        onChanged?.Invoke();
     }
 
     public bool Buy(float cost)

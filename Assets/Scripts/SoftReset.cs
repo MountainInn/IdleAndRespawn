@@ -2,22 +2,31 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Newtonsoft.Json;
+using System.Runtime.Serialization;
 
 [JsonObjectAttribute(MemberSerialization.OptIn)]
 public class SoftReset : MonoBehaviour
 {
     static public SoftReset _Inst;
-    static public Action reset;
-    static public Action onReset, onBossSpawn;
+    static public Action
+        reset, reincarnation,
+        onReset, onReincarnation;
+
+    static public Action<int>
+        onMaxStageChanged;
+
     static public float respawnDuration = 2;
 
-    [JsonPropertyAttribute] static public float lastReset;
+    [JsonPropertyAttribute] static public int respawnCount = 0;
+
+    [JsonPropertyAttribute] static public DateTime lastRespawn;
 
     [JsonPropertyAttribute]
-    static public int maxStage = 1, lastStage=1;
+    static public int maxStage = 1, lastStage = 1;
 
 
-    public void OnDeserialize()
+    [OnDeserializedAttribute]
+    public void OnDeserialized(StreamingContext context)
     {
         UpdateMaxStage();
     }
@@ -27,54 +36,67 @@ public class SoftReset : MonoBehaviour
         _Inst = this;
 
 
-        reset += () =>
+        reset = () =>
         {
+            StagesToTalentPoints();
+
             lastStage = Boss._Inst._StageNumber;
             UpdateMaxStage();
 
-            StagesToTalentPoints();
 
             Boss._Inst.ResetStages();
             Boss._Inst.shield.Out();
 
-            Hero._Inst.CutoffAttackTimer();
+            // Hero._Inst.CutoffAttackTimer();
             StartCoroutine(Hero._Inst.OnDeath());
             StartCoroutine(Followers._Inst.OnDeath());
             StartCoroutine(Boss._Inst.OnHeroDeath());
 
 
-            lastReset = Time.time;
+            lastRespawn = DateTime.UtcNow;
 
-            GameLogger.Logg("respawn", "");
+            respawnCount++;
 
             onReset?.Invoke();
         };
 
-        onBossSpawn += ()=>
+        reincarnation = ()=>
         {
+            Boss._Inst._StageNumber =
             lastStage =
                 maxStage = 1;
 
+
             Boss._Inst.ResetStages();
             Boss._Inst.shield.Out();
+            UpdateMaxStage();
 
             Hero._Inst.CutoffAttackTimer();
             StartCoroutine(Hero._Inst.OnDeath());
             StartCoroutine(Followers._Inst.OnDeath());
             StartCoroutine(Boss._Inst.OnDeath());
+
+
+            lastRespawn = DateTime.UtcNow;
+
+            onReset?.Invoke();
+            onReincarnation?.Invoke();
         };
 
     }
 
     public static void UpdateMaxStage()
     {
-        maxStage = Mathf.Max(maxStage, Boss._Inst._StageNumber);
+        if (maxStage < Boss._Inst._StageNumber)
+        {
+            maxStage = Boss._Inst._StageNumber;
+
+            onMaxStageChanged?.Invoke(maxStage);
+        }
     }
 
     void Start()
     {
-        lastReset = Time.time;
-
         Hero._Inst.onDeathChain.Add(int.MaxValue, (unit) => reset.Invoke());
     }
 
@@ -94,6 +116,5 @@ public class SoftReset : MonoBehaviour
         Vault.talentPoints.Earn(talentPoints);
     }
 
-    static public float TimeSinceLastReset => Time.time - lastReset;
+    static public TimeSpan TimeSinceLastReset => DateTime.UtcNow.Subtract(lastRespawn);
 }
-

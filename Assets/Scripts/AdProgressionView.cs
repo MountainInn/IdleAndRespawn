@@ -19,20 +19,17 @@ public class AdProgressionView : MonoBehaviour
 
     Dictionary<AdProgression.LiftedTalent, MilestoneView> milestones = new Dictionary<AdProgression.LiftedTalent, MilestoneView>();
     
-    Advertisement advertisement;
-
 
     void SubscribeToAdvertisement()
     {
-        advertisement.cooldown.onRatioChanged += (ratio)=>{ UpdateAdCooldownText(); UpdateOrbFill(ratio); };
+        Advertisement._Inst.cooldown.onRatioChanged += (ratio)=>{ UpdateAdCooldownText(); UpdateOrbFill(ratio); };
+
     }
 
     void Start()
     {
-        advertisement = GameObject.FindObjectOfType<Advertisement>();
-
         UpdateAdCooldownText();
-        UpdateOrbFill(advertisement.cooldown.GetRatio());
+        UpdateOrbFill(Advertisement._Inst.cooldown.GetRatio());
 
         SubscribeToAdvertisement();
     }
@@ -41,13 +38,13 @@ public class AdProgressionView : MonoBehaviour
     {
         string str;
 
-        if (advertisement.cooldown.isFinished)
+        if (Advertisement._Inst.cooldown.isFinished)
         {
             str = "Ready!";
         }
         else
         {
-            var seconds = advertisement.cooldown.endTime - advertisement.cooldown.t;
+            var seconds = Advertisement._Inst.cooldown.endTime - Advertisement._Inst.cooldown.T;
             TimeSpan timespan = TimeSpan.FromSeconds(seconds);
             str = timespan.ToString();
         }
@@ -87,7 +84,6 @@ public class AdProgressionView : MonoBehaviour
 
     public void UpdateMilestones(AdProgression.LiftedTalent liftedTalent)
     {
-        Debug.Log("Lifted "+liftedTalent.name);
         milestones[liftedTalent].SetReachedColor();
         milestones[liftedTalent].UpdateView(liftedTalent);
     }
@@ -98,7 +94,7 @@ public class AdProgressionView : MonoBehaviour
 
         currentLevelText.text = $"Level {currentLevel}";
 
-        string percentStr = ( AdProgression._Inst.mult - 1f).ToString("P0");
+        string percentStr = ( AdProgression._Inst.Mult - 1f).ToString("P0");
 
         percentMultText.text = percentStr;
 

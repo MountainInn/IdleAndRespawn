@@ -4,9 +4,18 @@ public class DoDamageArgs
     public Unit attacker {get; private set;}
     public Unit target => attacker.target;
     public Range damage;
+
+    public bool IsSimpleAttack => !(isJudgement || isDiversion || isBlindingLight || isHotHanded || isReflected || isDoom || isBloodMadness);
+
     public bool
-        isReflected,
         isCritical,
+
+        isDiversion,
+        isBlindingLight,
+
+        isReflected,
+        isJudgement,
+
         isBloodMadness,
         isHotHanded,
         isDoom;
@@ -20,10 +29,6 @@ public class DoDamageArgs
     {
         this.attacker = attacker;
         this.damage = new Range(damage, float.MaxValue);
-
-        isReflected = false;
-        isCritical = false;
-        isBloodMadness = false;
     }
 
     public DoDamageArgs CopyShallow()

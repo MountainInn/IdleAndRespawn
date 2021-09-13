@@ -35,6 +35,7 @@ public partial class Boss : Unit
 
         InitReincarnationMult();
         AddReincarnationMult();
+        UpdateReincarnationMult();
 
 
         onTakeDamage +=
@@ -43,12 +44,15 @@ public partial class Boss : Unit
                 PutUpShield(args);
             };
 
+        stageFraction = 1f / MAX_STAGES_COUNT;
         stageSize = ((int) ( healthRange._Max * stageFraction ) );
         UpdateNextStageThreshold(healthRange._Val);
 
         takeDamageChain.Add(100, BossTakeDamage_New);
 
         SoftReset.onReset += ()=>{ ShieldHide(); };
+
+        onDeathChain.Add(100, (unit)=>{ SoftReset.reincarnation.Invoke(); });
     }
 
     void Start()
@@ -65,29 +69,37 @@ public partial class Boss : Unit
 
         ableToFight = true;
     }
-
+    static public Action onBossRespawned;
     new public IEnumerator OnDeath()
     {
-        float waitTime = SoftReset.respawnDuration / 2;
-
-        view.bossInterfaceFadeinout.Out();
+        var wait = new WaitForSeconds(SoftReset.respawnDuration / 2);
 
         ableToFight = false;
 
+
+        yield return view.bossInterfaceFadeinout.FadingOut();
+
+        CutoffAttackTimer();
+
         RegisterDeath();
 
-        yield return new WaitForSeconds(waitTime);
+        yield return wait;
 
+        UpdateReincarnationMult();
         Respawn();
 
-        yield return new WaitForSeconds(waitTime);
+        yield return wait;
+
+
+        onBossRespawned?.Invoke();
 
         ableToFight = true;
     }
 
     void RegisterDeath()
     {
-        Vault.bossSouls.Earn(bossSoulsReward);
+        /// Покажу когда будут готовы награды за души
+        // Vault.bossSouls.Earn(bossSoulsReward);
 
         PlayerStats._Inst.bossKilled++;
     }
@@ -102,19 +114,19 @@ public partial class Boss : Unit
     override protected void FirstInitStats()
     {
         damage = new StatMultChain(// 2.1f
-            70f, 0, 0);
+            88, 0, 0);
 
-        attackSpeed = new StatMultChain(5, 0, 0){ isPercentage = true };
+        attackSpeed = new StatMultChain(3, 0, 0){ isPercentage = true };
 
         critChance = new StatMultChain(.00f, 0.0f, 500){ isPercentage = true };
 
         critMult = new StatMultChain(1.5f, .01f, 500){ isPercentage = true };
 
-        armor = new StatMultChain(20, 0, 0);
+        armor = new StatMultChain(23, 0, 0);
 
-        InitHealth(1e6f, 0, 0);
+        InitHealth(1e7f, 0, 0);
 
-        reflect = new StatMultChain(0.01f, .0f, 0){ isPercentage = true };
+        reflect = new StatMultChain(0, 0, 0);
     }
 
 
@@ -131,7 +143,7 @@ public partial class Boss : Unit
 
     void PutUpShield(DoDamageArgs dargs)
     {
-        if (!dargs.isReflected)
+        if (!dargs.isReflected && !dargs.isDiversion)
         {
             if (dargs.attacker is Followers) followersCantPierce = dargs.damage._Val < 1;
             else if (dargs.attacker is Hero) heroCantPierce = dargs.damage._Val < 1;
@@ -160,13 +172,13 @@ public partial class Boss : Unit
     private void ShieldHide()
     {
         shield.Out();
-        doomFadeInOut.Out(); ;
+        // doomFadeInOut.Out(); ;
     }
 
     void ShieldShow()
     {
-                shield.In();
-                doomFadeInOut.In();
+        shield.In();
+        // doomFadeInOut.In();
     }
 
 }

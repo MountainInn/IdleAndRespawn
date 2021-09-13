@@ -9,8 +9,36 @@ using System.Linq;
 using UnityEngine.EventSystems;
 
 
+public static class CoroutineExtension
+{
+    public static IEnumerator InvokeAfter(Action action, float seconds)
+    {
+        var wait = new WaitForEndOfFrame();
+
+        while ((seconds -= Time.deltaTime) > 0f) yield return wait;
+
+        action.Invoke();
+    }
+}
+
+public static class TimespanExtension
+{
+    public static string ToStringFormatted(this TimeSpan ts)
+    {
+        return $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}";
+    }
+}
+
 public static class FloatExt
 {
+    static public string ToStringFormatted(this float n)
+    {
+        return
+            (n <= 9_999_999f)
+            ? n.ToString("#,###,##0")
+            : n.ToString("0.00e##0");
+    }
+
     static public string BeautifulFormat(float number)
     {
         float abs = Mathf.Abs(number);

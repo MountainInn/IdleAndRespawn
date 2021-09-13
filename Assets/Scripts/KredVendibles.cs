@@ -4,17 +4,17 @@ using UnityEngine;
 using UnityEngine.UI;
 using Newtonsoft.Json;
 
-public class KredGoods : MonoBehaviour
+public class KredVendibles : MonoBehaviour
 {
-    static KredGoods inst;
-    static public KredGoods _Inst => inst??=GameObject.FindObjectOfType<KredGoods>();
+    static KredVendibles inst;
+    static public KredVendibles _Inst => inst??=GameObject.FindObjectOfType<KredVendibles>();
 
     static public Currency Kredits;
 
-    [SerializeField] KredGoodView prefKredGoodView;
+    [SerializeField] KredVendibleView prefKredVendibleView;
     [SerializeField] Sprite hereditaryEquipmentIcon, combatTrainingIcon, wardAgainstEvilIcon;
 
-    Pool<KredGoodView> kredGoodPool;
+    Pool<KredVendibleView> kredVendiblePool;
 
     KredVendible
         hereditaryEquipment,
@@ -25,16 +25,16 @@ public class KredGoods : MonoBehaviour
     {
         Kredits = new Currency(1000);
 
-        kredGoodPool = new Pool<KredGoodView>(transform, prefKredGoodView, 3);
+        kredVendiblePool = new Pool<KredVendibleView>(transform, prefKredVendibleView, 3);
 
         hereditaryEquipment = new HereditaryEquipment().SetIcon(hereditaryEquipmentIcon);
         combatTraining = new CombatTraining().SetIcon(combatTrainingIcon);
         wardAgainstEvil = new WardAgainstEvil().SetIcon(wardAgainstEvilIcon);
 
 
-        kredGoodPool.Acquire().ConnectGood(hereditaryEquipment);
-        kredGoodPool.Acquire().ConnectGood(combatTraining);
-        kredGoodPool.Acquire().ConnectGood(wardAgainstEvil);
+        kredVendiblePool.Acquire().ConnectVendible(hereditaryEquipment);
+        kredVendiblePool.Acquire().ConnectVendible(combatTraining);
+        kredVendiblePool.Acquire().ConnectVendible(wardAgainstEvil);
     }
 
 
@@ -43,9 +43,9 @@ public class KredGoods : MonoBehaviour
 
     }
 
-    public void OnGoodsReady()
+    public void OnVendiblesReady()
     {
-        foreach (var item in kredGoodPool.EachActiveObject())
+        foreach (var item in kredVendiblePool.EachActiveObject())
         {
             item.UpdateView();
         }

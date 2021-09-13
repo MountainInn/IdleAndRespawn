@@ -3,8 +3,11 @@ using UnityEngine.UI;
 
 public class SoftResetView : MonoBehaviour
 {
-    [SerializeField] Text highestStageText,
-    lastStageText;
+    [SerializeField]
+    Text
+    highestStageText,
+    lastStageText,
+    respawnCountText;
 
     void Awake()
     {
@@ -20,5 +23,9 @@ public class SoftResetView : MonoBehaviour
     {
         highestStageText.text = $"Highest Stage: {SoftReset.maxStage}";
         lastStageText.text = $"Last Stage: {SoftReset.lastStage}";
+        respawnCountText.text = $"Respawns: {SoftReset.respawnCount}";
     }
+
+
+
 }

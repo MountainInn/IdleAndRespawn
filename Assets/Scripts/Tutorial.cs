@@ -40,7 +40,7 @@ public class Tutorial : MonoBehaviour
 
         SetChildrenActive(false);
 
-        SoftReset.onBossSpawn += ()=>
+        Boss.onBossRespawned += ()=>
         {
             if (!isReincarnationTutorialSeen) StartShowTutorial("Reincarnation");
             isReincarnationTutorialSeen = true;
@@ -191,9 +191,9 @@ public class Tutorial : MonoBehaviour
                 case HintPivot.rightBottom: positionMask = new Vector3(1, -1); break;
             }
 
-            float offset = Screen.width / 6 * ReferenceHeap.canvasScale;
+            float offset = Screen.width / 6;
 
-            hintPanel.position = positionMask * offset;
+            hintPanel.localPosition = positionMask * offset;
         }
 
         public enum HintPivot

@@ -41,7 +41,7 @@ public class Hatred : Talent
 
 public class CurseOfDoom:Talent
 {
-    Timer timer = new Timer(20);
+    static public Timer timer = new Timer(10);
 
     ProgressImage doomProgress;
 
@@ -75,7 +75,11 @@ public class CurseOfDoom:Talent
     void ApplyCurse()
     {
         var heroHealth = Hero._Inst.healthRange._Max;
-        var dargs = new DoDamageArgs(unit, heroHealth){ isDoom = true };
+        var followersHealth = Followers._Inst.healthRange._Max;
+
+        float damage = heroHealth * .2f;
+
+        var dargs = new DoDamageArgs(unit, damage){ isDoom = true };
 
         Hero._Inst.TakeDamage(dargs);
     }

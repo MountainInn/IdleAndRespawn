@@ -18,15 +18,15 @@ public class SaveSystem : MonoBehaviour
 
     string savePath;
 
+    FileWriter fileWriter;
+
     IEnumerable<JToken> talents;
 
     void Awake()
     {
         savePath = Application.persistentDataPath +"/save.txt";
-
     }
-    
-    
+
     public void SaveGame()
     {
         StringBuilder sb = new StringBuilder();
@@ -49,15 +49,17 @@ public class SaveSystem : MonoBehaviour
                      JsonConvert.SerializeObject(SoftReset._Inst, Formatting.Indented));
             Surround("Phases",
                      JsonConvert.SerializeObject(Phases._Inst, settings));
+            Surround("Vault",
+                     JsonConvert.SerializeObject(Vault._Inst, settings));
+            Surround("AdProgression",
+                     JsonConvert.SerializeObject(AdProgression._Inst, settings));
 
             writer.WriteEndObject();
 
 
-            using ( var fileStream = File.Create(savePath) )
-            {
-                
-                File.WriteAllText(savePath, sb.ToString());
-            }
+            if (File.Exists(savePath)) File.Delete(savePath);
+
+            File.WriteAllText(savePath, sb.ToString());
 
 
             void Surround(string objectName, string json)
@@ -71,6 +73,8 @@ public class SaveSystem : MonoBehaviour
 
     public void LoadGame()
     {
+        if (!File.Exists(savePath)) return;
+
         string json = File.ReadAllText(savePath);
 
         JObject save = JObject.Parse(json);
@@ -79,26 +83,31 @@ public class SaveSystem : MonoBehaviour
         JsonConvert.PopulateObject(save["Boss"].ToString(), Boss._Inst);
         JsonConvert.PopulateObject(save["Followers"].ToString(), Followers._Inst);
         JsonConvert.PopulateObject(save["SoftReset"].ToString(), SoftReset._Inst);
+        JsonConvert.PopulateObject(save["Vault"].ToString(), Vault._Inst);
+        JsonConvert.PopulateObject(save["AdProgression"].ToString(), AdProgression._Inst);
 
         talents = save["Phases"]["allActiveTalents"].Children();
-        
+
         LoadTalents(Phases.allActiveTalents);
     }
     
     void LoadTalents(List<Talent> allActiveTalents)
     {
+        var allDiscoveredTalents = new List<Talent>(Phases.allDiscoveredTalents);
+
         foreach(var item in talents)
         {
             var typeName = item["$type"].Value<string>().Split(',')[0];
 
-            var loadedTalent = allActiveTalents.FirstOrDefault(t => t.GetType().Name == typeName);
+            var loadedTalent = allDiscoveredTalents.FirstOrDefault(t => t.GetType().Name == typeName);
+
 
             if (loadedTalent != default)
             {
                 JsonConvert.PopulateObject(item.ToString(), loadedTalent);
+
+                allDiscoveredTalents.Remove(loadedTalent);
             }
-            else
-                Debug.Log("ERROR ERROR");
         }
     }
 

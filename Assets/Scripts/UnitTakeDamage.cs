@@ -14,15 +14,9 @@ public partial class Unit
         onTakeDamage?.Invoke(damageArgs);
 
 
-        if (damageArgs.attacker.vampirism != null)
+        if (damageArgs.IsSimpleAttack && damageArgs.attacker.vampirism != null)
         {
-            float vampHeal = damageArgs.attacker.vampirism.Result * damageArgs.damage._Val;
-
-            if (vampHeal < 1) return;
-
-            DoHealArgs vampArgs = new DoHealArgs(damageArgs.attacker, vampHeal);
-
-            damageArgs.attacker.TakeHeal(vampArgs);
+            damageArgs.attacker.Vamp(damageArgs);
         }
     }
     

@@ -37,8 +37,9 @@ public class CanvasGroupFadeInOut : MonoBehaviour
         if (affectBlocksRaycast) canvasGroup.blocksRaycasts = false;
         canvasGroup.interactable = false;
 
-        IEnumerator FadingOut()
-        {
+    }
+    public IEnumerator FadingOut()
+    {
             while (canvasGroup.alpha > 0)
             {
                 canvasGroup.alpha -= Time.deltaTime / transitionDuration;
@@ -48,7 +49,6 @@ public class CanvasGroupFadeInOut : MonoBehaviour
 
             visible = false;
         }
-    }
 
     public void In()
     {

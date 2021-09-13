@@ -36,7 +36,18 @@ public class Timer
     [SerializeField] public float endTime;
 
     [HideInInspector, JsonPropertyAttribute]
-    public float t;
+    float _t;
+
+    public float T
+    {
+        get => _t;
+        set
+        {
+            _t = value;
+
+            onRatioChanged?.Invoke(GetRatio());
+        }
+    }
 
     [HideInInspector] public Action<float> onRatioChanged;
     [HideInInspector] public bool isLooping = true, isFinished;
@@ -44,27 +55,25 @@ public class Timer
     public Timer(float max)
     {
         this.endTime = max;
-        t = 0f;
+        _t = 0f;
     }
 
     public void AddSeconds(float diff)
     {
-        t += diff;
+        _t += diff;
 
-        t = Mathf.Clamp(t, 0.0f, endTime);
-
-        onRatioChanged?.Invoke(GetRatio());
+        T = Mathf.Clamp(_t, 0.0f, endTime);
     }
 
     public void Reset()
     {
-        t = 0;
+        T = 0;
         isFinished = false;
     }
 
     public bool Countup()
     {
-        if (t < endTime)
+        if (_t < endTime)
         {
             AddSeconds(Time.deltaTime);
 
@@ -82,12 +91,11 @@ public class Timer
 
     public bool Tick()
     {
-        t += Time.deltaTime;
-        onRatioChanged?.Invoke(GetRatio());
+        T += Time.deltaTime;
 
-        if (t >= endTime )
+        if (_t >= endTime )
         {
-            t = 0;
+            T = 0;
 
             return true;
         }
@@ -99,7 +107,7 @@ public class Timer
         this.endTime = endTime;
     }
 
-    public float GetRatio() => t / endTime;
+    public float GetRatio() => _t / endTime;
 }
 
 public class StatBasedTimer : Timer
@@ -115,7 +123,7 @@ public class StatBasedTimer : Timer
 
     public void SetStat(StatMultChain stat)
     {
-        endtimeStat.onRecalculate += UpdateEndtime;
+        endtimeStat.chain.onRecalculateChain += UpdateEndtime;
     }
 
     public void UpdateEndtime() => SetEndTime(endtimeStat.Result);

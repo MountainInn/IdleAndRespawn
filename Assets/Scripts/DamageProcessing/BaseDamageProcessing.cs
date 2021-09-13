@@ -90,7 +90,7 @@ abstract public class DamageProcessing
                 }
                 else if (attr is TakeHealOrder)
                 {
-                    AddOrRemoveMethod(unit.vampChain, attr, method, typeof(Action<DoHealArgs>), toggle);
+                    AddOrRemoveMethod(unit.takeHealChain, attr, method, typeof(Action<DoHealArgs>), toggle);
                 }
                 else if (attr is HealOrder ho)
                 {
@@ -215,15 +215,15 @@ public class PerseveranceStat : StatMultChain
 
         onRecalculate += RecalculateMutation;
         SoftReset.onReset += RecalculateMutation;
-        SoftReset.onBossSpawn += RecalculateMutation;
+        SoftReset.onReincarnation += RecalculateMutation;
 
         RecalculateMutation();
     }
 
     private void RecalculateMutation()
     {
-        float log = Mathf.Log(Result + SoftReset.maxStage, 10);
-        mutation = 1 + log * log * .05f;
+        float log = Mathf.Log(Result+1, 10)/5;
+        mutation = 1 + log;
 
         armorBonus.Mutation = mutation;
         damageBonus.Mutation = mutation;
@@ -266,8 +266,10 @@ public class Healing : DamageProcessing
 
     bool CanHealFollowers()
     {
-        return (unit.followers.Alive || unit.canRessurect) &&
-            unit.followers.healthRange._Val < unit.followers.healthRange._Max;
+        return
+            unit.followers.Alive &&
+            unit.followers.healthRange._Val < unit.followers.healthRange._Max
+            || unit.canRessurect;
     }
 
     void HealFollowers()
@@ -284,7 +286,7 @@ public class Healing : DamageProcessing
     
     public void MakeHealing()
     {
-        var healArgs = new DoHealArgs(unit, unit.healing.Result);
+        var healArgs = new DoHealArgs(unit, unit.healing.Result){ isHeal = true };
         
         target.TakeHeal(healArgs);
     }
@@ -300,6 +302,9 @@ public class TakeHeal : DamageProcessing
 
     void TakeHeal_(DoHealArgs hargs)
     {
-        unit.AffectHP(+hargs.heal);
+        float missingHP = unit.healthRange._Max - unit.healthRange._Val;
+
+        hargs.heal = Mathf.Min(missingHP, hargs.heal);
+        unit.AffectHP(hargs.heal);
     }
 }

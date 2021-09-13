@@ -1,0 +1,216 @@
+diff a/Assets/Scripts/StatEuw.cs b/Assets/Scripts/StatEuw.cs	(rejected hunks)
+@@ -3,7 +3,7 @@ using UnityEngine;
+ using UnityEngine.UI;
+ using System.Reflection;
+ 
+-public class StatEuw : Euw<StatEuw>
++public class StatEuw : ViewStateUser<StatViewState>, IStatViewState
+ {
+     static public List<StatEuw> instances = new List<StatEuw>();
+ 
+@@ -22,7 +22,7 @@ public class StatEuw : Euw<StatEuw>
+ 
+     int targetLevelIncrease => ShoppingCart._BuyLevelQuantity;
+ 
+-    public EuwState<StatEuw>
++    public StatViewState
+         checkingVaultState = new StateCheckingVault(),
+         limitReachedState = new StateLimitReached();
+ 
+@@ -36,6 +36,20 @@ public class StatEuw : Euw<StatEuw>
+         stat = FindUpgradeField(unit);
+ 
+         checkingVaultState.Setup(this);
++
++        UpdateInteractable();
++
++
++        Vault.expirience.onChanged += UpdateInteractable;
++
++        ShoppingCart.onChangedBuyLevelQuantity += UpdateInteractable;
++
++        stat.chain.onRecalculateChain += UpdateAfterBuy;
++
++        button.onClick.AddListener(LevelupStat);
++
++        if (stat.limit != null)
++                stat.limit.onMutationUpdated += CheckLimit;
+     }
+ 
+     StatMultChain FindUpgradeField<T>(T unit) where T : Unit
+@@ -45,42 +59,27 @@ public class StatEuw : Euw<StatEuw>
+             ?.GetValue(unit);
+     }
+ 
++    public void LevelupStat() => currentState.LevelupStat();
+ 
+-    public class StateCheckingVault : EuwState<StatEuw>
+-    {
+-        protected override void ConcreteSetup()
+-        {
+-            UpdateInteractable();
++    public void UpdateInteractable() => currentState.UpdateInteractable();
+ 
+-            Vault.expirience.onChanged += UpdateInteractable;
+-            
+-            ShoppingCart.onChangedBuyLevelQuantity += UpdateInteractable;
++    public void UpdateAfterBuy() => currentState.UpdateAfterBuy();
+ 
+-            view.stat.chain.onRecalculateChain += UpdateAfterBuy;
++    public void CheckLimit() => currentState.CheckLimit();
+ 
+-            view.button.onClick.AddListener(LevelupStat);
+ 
+-            if (view.stat.limit != null)
+-                view.stat.limit.onMutationUpdated += CheckLimit; 
+-        }
+ 
+-        protected override void Uninstall()
++    public class StateCheckingVault: StatViewState
++    {
++        public override void CheckLimit()
+         {
+-            Vault.expirience.onChanged -= UpdateInteractable;
+-
+-            ShoppingCart.onChangedBuyLevelQuantity -= UpdateInteractable;
+-
+-            view.stat.chain.onRecalculateChain -= UpdateAfterBuy;
+-
+-            view.button.onClick.RemoveListener(LevelupStat);
+-
+-            if (view.stat.limit != null)
+-                view.stat.limit.onMutationUpdated -= CheckLimit; 
++            if (view.stat.isLimitReached)
++            {
++                view.limitReachedState.Setup(view);
++            }
+         }
+ 
+-        public override void Update() {}
+-
+-        void LevelupStat()
++        public override void LevelupStat()
+         {
+             view.stat.LevelUp(Vault.expirience, view.stat.maxAffordableLevel);
+ 
+@@ -88,7 +87,17 @@ public class StatEuw : Euw<StatEuw>
+             // UpdateInteractable();
+         }
+ 
+-        public void UpdateInteractable()
++        public override void UpdateAfterBuy()
++        {
++            view.value.text =
++                (view.stat.isPercentage)
++                ? view.stat.Result.ToString("P0")
++                : view.stat.Result.ToStringFormatted();
++
++            view.level.text = view.stat.level.ToString();
++        }
++
++        public override void UpdateInteractable()
+         {
+             view.stat.CalculateMaxAffordableLevel(view.targetLevelIncrease, out bool canAfford);
+ 
+@@ -99,56 +108,63 @@ public class StatEuw : Euw<StatEuw>
+             view.cost.color = (canAfford) ? Color.green : Color.red;
+         }
+ 
+-        void UpdateAfterBuy()
++        protected override void ConcreteSetup()
+         {
+-            view.value.text =
+-                (view.stat.isPercentage)
+-                ? view.stat.Result.ToString("P0")
+-                : view.stat.Result.ToStringFormatted();
+-
+-            view.level.text = view.stat.level.ToString();
++            UpdateInteractable();
+         }
+ 
+-        void CheckLimit()
+-        {
+-            if (view.stat.isLimitReached)
+-            {
+-                view.limitReachedState.Setup(view);
+-            }
+-        }
++        protected override void Uninstall() {}
++        public override void Update() {}
+     }
+-    public class StateLimitReached : EuwState<StatEuw>
+-    {
+-        public override void Update()
+-        {}
+ 
++    public class StateLimitReached : StatViewState
++    {
+         protected override void ConcreteSetup()
+         {
+             view.button.interactable = false;
+-            
+-            view.stat.limit.onMutationUpdated += CheckLimit;
+-        }
+-        protected override void Uninstall()
+-        {
+-            view.stat.limit.onMutationUpdated -= CheckLimit;
+         }
+ 
+-        void CheckLimit()
++        public override void CheckLimit()
+         {
+             if (!view.stat.isLimitReached)
+             {
+                 view.checkingVaultState.Setup(view);
+             }
+         }
++
++        public override void LevelupStat() {}
++        public override void Update() {}
++        public override void UpdateAfterBuy() {}
++        public override void UpdateInteractable() {}
++        protected override void Uninstall() {}
+     }
+ }
+ 
++abstract public class StatViewState : ViewState<StatEuw>, IStatViewState
++{
++    public abstract void CheckLimit();
++    public abstract void LevelupStat();
++    public abstract void UpdateAfterBuy();
++    public abstract void UpdateInteractable();
++}
++
++public interface IStatViewState
++{
++    public void LevelupStat() ;
++
++    public void UpdateInteractable() ;
++
++    public void UpdateAfterBuy() ;
++
++    public void CheckLimit() ;
++}
++
+ 
+-public abstract class EuwState<T> where T:Euw<T>
++public abstract class ViewState<UserT, S> where UserT : ViewStateUser<S> S :ViewState<UserT>
+ {
+-    public T view;
++    public UserT view;
+ 
+-    public void Setup(T view)
++    public void Setup(UserT view)
+     {
+         this.view = view;
+ 
+@@ -165,7 +181,7 @@ public abstract class EuwState<T> where T:Euw<T>
+     abstract protected void Uninstall();
+ }
+ 
+-abstract public class Euw<T> : MonoBehaviour where T:Euw<T>
++abstract public class ViewStateUser<StateT> : MonoBehaviour
+ {
+-    public EuwState<T> currentState;
++    public StateT currentState;
+ }

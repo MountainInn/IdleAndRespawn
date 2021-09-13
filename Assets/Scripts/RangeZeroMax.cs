@@ -94,4 +94,11 @@ public class Range
         _Max = max;
         _Val = max * ratio;
     }
+
+    static public Range operator-(Range left, Range right)
+    {
+        left._Val -= right._Val;
+
+        return left;
+    }
 }

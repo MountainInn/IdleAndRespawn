@@ -35,6 +35,11 @@ public class ActionChain<T> where T : class
         callbacks[order] -= callback;
     }
 
+    public void Remove(Action<T> callback)
+    {
+        callbacks[0] -= callback;
+    }
+
     public T Invoke(T input)
     {
         foreach (var item in new List<Action<T>>(callbacks.Values))

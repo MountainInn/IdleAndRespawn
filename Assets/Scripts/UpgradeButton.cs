@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 using System;
 
 [RequireComponent(typeof(Button))]
-public class UpgradeButton : MonoBehaviour
+public class UpgradeButton : Register<UpgradeButton>
 {
     [SerializeField] Unit unit;
     [SerializeField] string upgradeName;
@@ -17,8 +17,8 @@ public class UpgradeButton : MonoBehaviour
         valText,
         costText;
 
-    Button self;
-    StatMultChain stat;
+    public Button self;
+    public StatMultChain stat;
 
     int targetLevelIncrease => ShoppingCart._BuyLevelQuantity;
     StatMultChain FindUpgradeField<T>(T unit)
@@ -27,6 +27,11 @@ public class UpgradeButton : MonoBehaviour
         return (StatMultChain) unit.GetType()
             .GetField(upgradeName, BindingFlags.Public | BindingFlags.Instance)
             ?.GetValue(unit);
+    }
+
+    void Awake()
+    {
+        RegisterSelf();
     }
 
     void Start()
@@ -50,35 +55,32 @@ public class UpgradeButton : MonoBehaviour
         
         stat.chain.onRecalculateChain += ()=>
         {
-            CacheStrings();
-            CacheNextStrings();
+
+
             DisplayVal();
 
 
             CheckLimits();
         };
 
-        if (stat.limit != null)
-            stat.limit.onMutationUpdated += () =>
+        if (stat.limitGrowth != null)
+            stat.limitGrowth.onMutationUpdated += () =>
             {
                 CheckLimits();
             };
 
-        CacheStrings();
-        CacheNextStrings();
+
+
         DisplayVal();
         UpdateInteractable();
 
-        Vault.expirience.onChanged += (change) => {
-            CacheNextStrings();
-            DisplayVal();
+        Vault.expirience.onChanged_Amount += (change) => {
+
             UpdateInteractable();
         };
 
         ShoppingCart.onChangedBuyLevelQuantity += ()=>
         {
-            CacheNextStrings();
-            DisplayVal();
             UpdateInteractable();
         };
 
@@ -105,6 +107,18 @@ public class UpgradeButton : MonoBehaviour
         valText.text = strNextVal;
     }
 
+    public void UpdateInteractable()
+    {
+        stat.CalculateMaxAffordableLevel(targetLevelIncrease, out bool canAfford);
+
+        self.interactable = canAfford;
+
+        costText.color = (canAfford) ? green : red;
+
+        DisplayNextLevel();
+        DisplayVal();
+    }
+
     void DisplayNextLevel()
     {
         strNextLevel = stat.maxAffordableLevel.ToString();
@@ -116,47 +130,23 @@ public class UpgradeButton : MonoBehaviour
     {
         valText.text = strVal;
 
-        costText.text = strNextCost;
-
         levelText.text = strLevel;
     }
 
 
-    void CacheStrings()
+    void MakeStrings()
     {
-        if (stat.isPercentage) strVal = stat.Result.ToString("P0");
-        else if (stat.Result < 1000) strVal = stat.Result.ToString("N0");
-        else strVal = stat.Result.ToString("e2");
+        strVal =
+            (stat.isPercentage)
+            ? stat.Result.ToString("P0")
+            : stat.Result.ToStringFormatted();
 
         strLevel = stat.level.ToString();
-    }
-
-    void CacheNextStrings()
-    {
-        strNextVal = stat.GetValForNextLevel(targetLevelIncrease).ToString();
-
-        strNextCost = FloatExt.BeautifulFormat((stat.maxAffordableLevel > 0) ? stat.maxAffordableCost : stat.GetCostForNextLevel(1) );
     }
 
 
     Color
         green = Color.green,
         red = Color.red;
-    
-    void UpdateInteractable()
-    {
-        stat.CalculateMaxAffordableLevel(targetLevelIncrease, out bool canAfford);
-        
-        self.interactable = canAfford;
-
-        costText.color = (canAfford) ? green : red;
-
-        CacheNextStrings();
-        DisplayNextLevel();
-        DisplayVal();
-    }
-
-
-
 
 }

@@ -4,11 +4,22 @@ public class BattleExpiriense : MonoBehaviour
 {
     static float
         flatExp = 100,
-        damageToExpMult = .5f;
+        maxStageToExpMult = 10f,
+        expPerHit;
+
+    void Awake()
+    {
+        UpdateExpPerHit();
+
+        SoftReset.onMaxStageChanged += (newMaxStage)=> UpdateExpPerHit();
+    }
+    void UpdateExpPerHit()
+    {
+        expPerHit = Mathf.Floor(flatExp + SoftReset.maxStage * maxStageToExpMult);
+    }
 
     static public void MakeExpiriense(DoDamageArgs damageArgs)
     {
-        Vault.expirience.Earn( Mathf.Floor( flatExp +
-                                 damageArgs.damage._Val * damageToExpMult ) );
+        Vault.expirience.Earn(expPerHit);
     }
 }

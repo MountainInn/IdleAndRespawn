@@ -8,15 +8,16 @@ public class ReferenceHeap : MonoBehaviour
     static public ReferenceHeap _Inst => inst ??= GameObject.FindObjectOfType<ReferenceHeap>();
     
 
-    Canvas canvas;
+    Canvas _canvas;
     static public float canvasScale
     {
         get
         {
-            if (_Inst.canvas == null) _Inst.canvas = GameObject.FindObjectOfType<Canvas>();
-            return _Inst.canvas.transform.localScale.x;
+            if (_Inst._canvas == null) _Inst._canvas = GameObject.FindObjectOfType<Canvas>();
+            return _Inst._canvas.transform.localScale.x;
         }
     }
+    static public Canvas canvas => _Inst._canvas;
     public Transform bossHpBar;
 
     public ProgressImage curseOfDoomProgress;

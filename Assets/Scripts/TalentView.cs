@@ -1,30 +1,38 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine.EventSystems;
 
 
 [RequireComponent(typeof(TooltipTarget))]
-public class TalentView : Register<TalentView>
+public class TalentView : ViewClass
 {
+    static public List<TalentView> instances = new List<TalentView>();
+
     [SaveField] bool isNewopened = true;
 
-    Image newopenFlareImage;
-    Button button;
+    [SerializeField]
+    Image newopenFlareImage, checkmark;
+    public Button button;
 
     TooltipTarget tooltipTarget;
     TalentTooltip talentTooltip;
     EventTrigger eventTrigger;
 
 
-    Talent thisTalent;
+    public Talent thisTalent;
 
 
-    public TalviewState state;
-    public Action<float> updateView_onCurrencyChanged;
-    public Action updateView;
+    public State
+        coveredState,
+        discoveredState,
+        boughtState;
+
+    public Action<float> updateOnCurrencyChanged;
+    public Action updateOnPointerEnter;
 
     public void ConnectToTalent(Talent tal)
     {
@@ -34,12 +42,10 @@ public class TalentView : Register<TalentView>
         
         tooltipTarget.tooltip = talentTooltip = GameObject.FindObjectOfType<TalentTooltip>();
 
-        talentTooltip.lCost.text = thisTalent.cost.ToString();
-
         tooltipTarget.onPointerEnter +=
             () =>{
                 talentTooltip.SetContent(thisTalent);
-                updateView?.Invoke();;
+                updateOnPointerEnter?.Invoke();;
             };
 
 
@@ -48,17 +54,14 @@ public class TalentView : Register<TalentView>
         eventTrigger.AddTrigger(EventTriggerType.PointerEnter,
                                 (args)=>
                                 {
-                                    OnHovered();
+                                    FirstTimeHover();
                                 });
 
         tooltipTarget.InitializeEventTrigger(eventTrigger);
 
 
-        button.onClick.AddListener(() =>{
-            thisTalent.Buy(Vault.talentPoints);
-            });
 
-        Vault.talentPoints.onChanged += updateView_onCurrencyChanged;
+        Vault.talentPoints.onChanged_Amount += updateOnCurrencyChanged;
 
         gameObject.SetActive(true);
     }
@@ -67,21 +70,21 @@ public class TalentView : Register<TalentView>
 
     void Awake()
     {
-        RegisterSelf();
+        instances.Add(this);
 
         button = GetComponentInChildren<Button>();
 
         if (button == null) Debug.LogWarning("button is null");
 
-        newopenFlareImage =
-            GetComponentsInChildren<Image>()
-            .First(child => child.name == "NewopenFlare");
 
-        
-        new CoveredState().Setup(this);
+        coveredState = new CoveredState(this);
+        discoveredState = new DiscoveredState(this);
+        boughtState = new BoughtState(this);
+
+        SwitchState(coveredState);
     }
 
-    void OnHovered()
+    public void FirstTimeHover()
     {
         if (isNewopened)
         {
@@ -91,70 +94,72 @@ public class TalentView : Register<TalentView>
         }
     }
 
-    public abstract class TalviewState
+    public abstract class State : ViewState
     {
-        public TalentView view;
+        new public TalentView view;
 
-        public void Setup(TalentView view)
+        public State(TalentView view) : base(view)
         {
             this.view = view;
-            view.state = this;
-
-            ConcreteSetup();
         }
-
-        abstract protected void ConcreteSetup();
-
-        abstract public TalviewState NextState();
-
-        abstract protected bool CanChangeState();
-
-        abstract public void Update();
     }
 
-    public class CoveredState : TalviewState
+    public class CoveredState : State
     {
-        protected override void ConcreteSetup()
+        public CoveredState(TalentView view) : base(view) {}
+
+        public override void Setup()
         {
             view.gameObject.SetActive(false);
+            view.checkmark.gameObject.SetActive(false);
         }
 
-        public override void Update() {}
-
-        public override TalviewState NextState()
+        public override void Uninstall()
         {
-            if (CanChangeState()) return new DiscoveredState();
-            else return this;
-        }
-
-        protected override bool CanChangeState()
-        {
-            return view.thisTalent.isDiscovered;
         }
     }
 
-    public class DiscoveredState : TalviewState
+    public class DiscoveredState : State
     {
-        protected override void ConcreteSetup()
+        public DiscoveredState(TalentView view) : base(view) {}
+
+        public override void Setup()
         {
-            view.talentTooltip.lCost.text = view.thisTalent.cost.ToString();
+            view.button.onClick.AddListener(BuyTalent);
+            view.updateOnPointerEnter = OnPointerEnter;
+            view.updateOnCurrencyChanged = OnCurrencyChanged;
+
+
+            view.talentTooltip.lCost.text = view.thisTalent.cost.ToStringFormatted();
 
             if (view.isNewopened)
                 NewopenFlare._Inst.OnNewTalentOpened(view.newopenFlareImage);
 
 
-            view.updateView = Update;
-            view.updateView_onCurrencyChanged = UpdateView;
-
-
-            Update();
+            OnPointerEnter();
 
             view.gameObject.SetActive(true);
+
+            view.checkmark.gameObject.SetActive(false);
         }
 
-        void UpdateView(float currencyChanged) => Update();
+        public override void Uninstall()
+        {
+            view.button.onClick.RemoveListener(BuyTalent);
+            view.updateOnPointerEnter = null;
+            view.updateOnCurrencyChanged = null;
+        }
 
-        public override void Update()
+        private void BuyTalent()
+        {
+            view.thisTalent.Buy(Vault.talentPoints);
+        }
+        void OnPointerEnter()
+        {
+            view.talentTooltip.lCost.text = view.thisTalent.cost.ToStringFormatted();
+        }
+
+        void OnCurrencyChanged(float currencyChanged)
         {
             bool canAfford = view.thisTalent.CanAfford();
 
@@ -167,49 +172,49 @@ public class TalentView : Register<TalentView>
                 view.talentTooltip.lCost.color = Color.red;
             }
 
-
             view.button.interactable = canAfford;
         }
 
-        public override TalviewState NextState()
-        {
-            if (CanChangeState()) return new BoughtState();
-            else return this;
-        }
-
-        protected override bool CanChangeState()
-        {
-            return view.thisTalent.isBought;
-        }
     }
 
-    public class BoughtState : TalviewState
+    public class BoughtState : State
     {
-        protected override void ConcreteSetup()
+        public BoughtState(TalentView view) : base(view) {}
+
+        public override void Setup()
         {
-            view.button.transition = Button.Transition.None;
-            view.button.interactable = false;
+            view.updateOnPointerEnter = OnPointerEnter;
+            view.updateOnCurrencyChanged = null;
 
-
-            view.updateView = Update;
-            view.updateView_onCurrencyChanged = null;
-
+            TurnButtonOff();
 
             view.gameObject.SetActive(true);
+
+            view.checkmark.gameObject.SetActive(true);
+
+            view.FirstTimeHover();
+
+            OnPointerEnter();
         }
 
-        public override void Update()
+        public override void Uninstall()
         {
+            view.updateOnPointerEnter = null;
         }
 
-        public override TalviewState NextState()
+        private void TurnButtonOff()
         {
-            return this;
+            Color normalColor = view.button.colors.normalColor;
+
+            view.button.interactable = true;
+            view.button.transition = Button.Transition.None;
+            view.button.image.color = normalColor;
         }
 
-        protected override bool CanChangeState()
+        void OnPointerEnter()
         {
-            return false;
+            view.talentTooltip.lCost.color = Color.green;
+            view.talentTooltip.lCost.text = "Owned";
         }
     }
 

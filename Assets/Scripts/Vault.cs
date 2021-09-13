@@ -1,38 +1,59 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using Newtonsoft.Json;
 
+[JsonObjectAttribute(MemberSerialization.OptIn)]
 public class Vault : MonoBehaviour
 {
+    static Vault inst;
+    static public Vault _Inst => inst??=GameObject.FindObjectOfType<Vault>();
+
+    [JsonPropertyAttribute]
     static public Currency
         expirience,
         talentPoints,
-        bossSouls;
-
-    [SerializeField] Text expirienceView, talentPointsView, bossSoulsView;
-    [SerializeField] FloatingTextMaker expEarn, talEarn, bossSoulsEarn;
+        soulshard;
+    [SerializeField] Text expirienceView, talentPointsView, soulshardView;
+    [SerializeField] FloatingTextMaker expEarn, talEarn, soulshardEarn;
+    [SerializeField, SpaceAttribute]
+    GameObject bossSoulsViewParent;
 
     void Awake()
     {
         expirience = new Currency(0);
-        talentPoints = new Currency(200000);
-        bossSouls = new Currency(0);
+        talentPoints = new Currency(1000);
+        soulshard = new Currency(0);
 
         InitView(expirienceView, expEarn, expirience);
         InitView(talentPointsView, talEarn, talentPoints);
-        InitView(bossSoulsView, bossSoulsEarn, bossSouls);
+        // InitView(soulshardView, soulshardEarn, soulshard);
+
+        bossSoulsViewParent.SetActive(false);
+    }
+
+    void Start()
+    {
     }
 
     void InitView(Text view, FloatingTextMaker earnText, Currency currency)
     {
         view.text = currency._Val.ToString();
 
-        currency.onChanged += (change) =>
+        currency.onChanged += ()=>
         {
-            view.text = FloatExt.BeautifulFormatSigned(currency._Val);
+            view.text = currency._Val.ToStringFormatted();
+        };
 
-            earnText.SpawnText(FloatExt.BeautifulFormatSigned(change), Color.white);
+        currency.onChanged_Amount += (change) =>
+        {
+            earnText.SpawnText(change.ToStringFormatted(), Color.white);
         };
     }
 
+    static public void ActivateBossSoulsView()
+    {
+        if (!_Inst.bossSoulsViewParent.activeSelf)
+            _Inst.bossSoulsViewParent.SetActive(true);
+    }
 }

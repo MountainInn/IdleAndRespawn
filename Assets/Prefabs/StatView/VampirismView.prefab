@@ -7,9 +7,21 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 220690262482724629, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
+      propertyPath: m_Color.b
+      value: 0.41176474
+      objectReference: {fileID: 0}
+    - target: {fileID: 220690262482724629, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
+      propertyPath: m_Color.g
+      value: 0.41176474
+      objectReference: {fileID: 0}
+    - target: {fileID: 220690262482724629, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
+      propertyPath: m_Color.r
+      value: 0.7411765
+      objectReference: {fileID: 0}
     - target: {fileID: 1796510785799505709, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
       propertyPath: m_RootOrder
-      value: 5
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 1796510786126109145, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
       propertyPath: m_Sprite
@@ -111,6 +123,30 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2678033569847992312, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
+      propertyPath: upgradeName
+      value: vampirism
+      objectReference: {fileID: 0}
+    - target: {fileID: 3361120523689826422, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
+      propertyPath: m_RootOrder
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 6285307927392522585, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
+      propertyPath: m_Name
+      value: FullBlood_Talview
+      objectReference: {fileID: 0}
+    - target: {fileID: 6285307927554616381, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 23bd590f0ded5534180e79fb3b592f62, type: 3}
+    - target: {fileID: 6333189804783406239, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: fd6cd08d25264c0479a4f29d9cb3a003, type: 3}
+    - target: {fileID: 6333189805178286587, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
+      propertyPath: m_Name
+      value: BloodMadness_Talview
+      objectReference: {fileID: 0}
     - target: {fileID: 6336365007991614309, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
       propertyPath: m_Text
       value: Vampirism
@@ -127,17 +163,24 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.6698113
       objectReference: {fileID: 0}
+    - target: {fileID: 7471406507733023741, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
+      propertyPath: m_Color.b
+      value: 0.7294118
+      objectReference: {fileID: 0}
+    - target: {fileID: 7471406507733023741, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
+      propertyPath: m_Color.g
+      value: 0.7294118
+      objectReference: {fileID: 0}
+    - target: {fileID: 7471406507733023741, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
+      propertyPath: m_Color.r
+      value: 0.882353
+      objectReference: {fileID: 0}
     - target: {fileID: 8590264442591448115, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
       propertyPath: content
       value: Hero is getting healed by a fraction of damage dealt
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
---- !u!224 &1176267425219985192 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 1796510786126109151, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
-  m_PrefabInstance: {fileID: 629534140243240695}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1176267425219985198 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1796510786126109145, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
@@ -149,197 +192,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1001 &1474346208372149564
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 1176267425219985192}
-    m_Modifications:
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_Pivot.x
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_Pivot.y
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_RootOrder
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_AnchorMin.x
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 42.03
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 42.03
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 50
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: -10
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790967, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
-      propertyPath: m_Name
-      value: FullBlood_Talview
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 49a1f01e19eb37243b8564e582665119, type: 3}
---- !u!1001 &1718098840525880345
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 1176267425219985192}
-    m_Modifications:
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_Pivot.x
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_Pivot.y
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_RootOrder
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_AnchorMin.x
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 42.03
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 42.03
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: -50
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: -10
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790952, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4098616315778790967, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}
-      propertyPath: m_Name
-      value: BloodMadness_Talview
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: e50d8261bfe13c9489026dec259d4dfb, type: 3}

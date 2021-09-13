@@ -1,36 +1,76 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using Newtonsoft.Json;
+using System.Runtime.Serialization;
 
+[JsonObjectAttribute(MemberSerialization.OptIn)]
 public class AdProgression : MonoBehaviour
 {
     static AdProgression inst;
     static public AdProgression _Inst => inst??=GameObject.FindObjectOfType<AdProgression>();
 
-    [HideInInspector] public int level;
-    [HideInInspector] public float mult;
+    int _level = 0;
+    [JsonPropertyAttribute]
+    public int Level
+    {
+        get => _level;
+        private set
+        {
+            _level = value;
+
+            Mult = 1f + _level * oneWatchBonus;
+
+            liftTalents.CheckFloors(_level);
+
+            view.UpdateLevel(_level);
+        }
+    }
+
+    float _mult = 1f;
+    [JsonPropertyAttribute] public float Mult
+    {
+        get => _mult;
+        private set
+        {
+            _mult = value;
+
+            heroArmorMult.Mutation = _mult;
+            heroDamageMult.Mutation = _mult;
+            followersArmorMult.Mutation = _mult;
+            followersDamageMult.Mutation = _mult;
+        }
+    }
+
+    public const float oneWatchBonus = .02f;
     [SpaceAttribute, SerializeField] VerticalLayoutGroup buffsLayout;
     [SerializeField]
     Image
         inspirationIcon,
         vengenceIcon,
         goodFortuneIcon,
+        lastWishesIcon,
         sharingLightIcon;
-
     ArithmeticNode
-        armorMult, damageMult;
+        heroArmorMult, heroDamageMult,
+        followersArmorMult, followersDamageMult;
+    public Lift<LiftedTalent>
+        liftTalents = new Lift<LiftedTalent>();
 
-    public Lift<LiftedTalent> liftTalents = new Lift<LiftedTalent>();
-
-    static public Advertisement advertisement;
-    AdProgressionView view;
+    [SerializeField] AdProgressionView view;
     Animation flareAnimation;
+
+
+    [System.Runtime.Serialization.OnDeserializedAttribute]
+    protected void OnDeserialized(StreamingContext sc)
+    {
+        liftTalents.CheckFloors(Level);
+    }
+
+
 
     void Start()
     {
-        view = GameObject.FindObjectOfType<AdProgressionView>();
-        advertisement = GetComponent<Advertisement>();
-        
         InitMult();
 
         InitTalents();
@@ -39,7 +79,7 @@ public class AdProgression : MonoBehaviour
         
         SubscribeToAdvertisement();
 
-        SetLevel(0);
+        Level = 0;
     }
 
     private void InitAnimation()
@@ -50,17 +90,17 @@ public class AdProgression : MonoBehaviour
 
     private void SubscribeToAdvertisement()
     {
-        advertisement.onReady += () => flareAnimation.Play();
-        advertisement.onWatched += () => flareAnimation.Stop(); ;
-        advertisement.onWatched += () => { LevelUp(); };
+        Advertisement.onReady += ()=>{ flareAnimation.Play(); };
+        Advertisement.onWatched += flareAnimation.Stop ;
+        Advertisement.onWatched += LevelUp;
     }
 
     private void InitTalents()
     {
-        liftTalents.Add(5, new Inspiration(inspirationIcon));
+        liftTalents.Add(05, new Inspiration(inspirationIcon));
         liftTalents.Add(10, new Vengence(vengenceIcon, this));
-        liftTalents.Add(20, new GoodFortune(goodFortuneIcon));
-        liftTalents.Add(30, new SharingLight(sharingLightIcon));
+        liftTalents.Add(20, new SharingLight(sharingLightIcon));
+        liftTalents.Add(30, new LastWishes(lastWishesIcon));
 
         view.InitMilestones();
         liftTalents.onLifted += (tal) => { view.UpdateMilestones(tal); };
@@ -68,35 +108,18 @@ public class AdProgression : MonoBehaviour
 
     private void InitMult()
     {
-        armorMult = new ArithmeticNode(new ArithmMult(), mult);
-        damageMult = new ArithmeticNode(new ArithmMult(), mult);
-
-        Hero._Inst.armor.chain.Add(4, armorMult);
-        Hero._Inst.damage.chain.Add(4, damageMult);
+        Hero._Inst.armor.chain.Add(4000, heroArmorMult = ArithmeticNode.CreateMult(1f));
+        Hero._Inst.damage.chain.Add(4000, heroDamageMult = ArithmeticNode.CreateMult(1f));
+        Followers._Inst.armor.chain.Add(4000, followersArmorMult = ArithmeticNode.CreateMult(1f));
+        Followers._Inst.damage.chain.Add(4000, followersDamageMult = ArithmeticNode.CreateMult(1f));
     }
 
     public void LevelUp()
     {
-        level++;
-
-        SetLevel(level);
+        Level++;
     }
 
-    void SetLevel(int level)
-    {
-        mult = 1f + level * .01f;
-        SetMult(mult);
 
-        liftTalents.CheckFloors(level);
-
-        view.UpdateLevel(level);
-    }
-
-    public void SetMult(float mult)
-    {
-        armorMult.Mutation = mult;
-        damageMult.Mutation = mult;
-    }
 
 
     abstract public class LiftedTalent : Talent, ILifted
@@ -140,14 +163,15 @@ public class AdProgression : MonoBehaviour
     public class Inspiration : LiftedTalent
     {
         float mutation = 1.1f;
-        ArithmeticNode damageMult;
+        ArithmeticNode heroDamageMult, followersDamageMult;
 
         public Inspiration(Image inspirationIcon) : base(Hero._Inst)
         {
-            damageMult = new ArithmeticNode(new ArithmMult(), 1);
+            heroDamageMult = ArithmeticNode.CreateMult();
+            Hero._Inst.damage.chain.Add(5000, heroDamageMult);
 
-            Hero._Inst.damage.chain.Add(5, damageMult);
-            Followers._Inst.damage.chain.Add(5, damageMult);
+            followersDamageMult = ArithmeticNode.CreateMult();
+            Followers._Inst.damage.chain.Add(5000, followersDamageMult);
 
             InitializeViewValues("Inspiration",
                                  $"+{mutation-1f:P0} attack damage to hero and followers while scrying is on cooldown");
@@ -158,14 +182,14 @@ public class AdProgression : MonoBehaviour
 
         override protected void Connect()
         {
-            advertisement.onWatched += StartBuff;
-            advertisement.onReady += EndBuff;
+            Advertisement.onWatched += StartBuff;
+            Advertisement.onReady += EndBuff;
         }
 
         override protected void Disconnect()
         {
-            advertisement.onWatched -= StartBuff;
-            advertisement.onReady -= EndBuff;
+            Advertisement.onWatched -= StartBuff;
+            Advertisement.onReady -= EndBuff;
             
             EndBuff();
         }
@@ -173,13 +197,17 @@ public class AdProgression : MonoBehaviour
 
         private void StartBuff()
         {
-            damageMult.Mutation = mutation;
+            heroDamageMult.Mutation = mutation;
+            followersDamageMult.Mutation = mutation;
+
             buffIcon.gameObject.SetActive(true);
         }
 
         private void EndBuff()
         {
-            damageMult.Mutation = 1f;
+            heroDamageMult.Mutation = 1f;
+            followersDamageMult.Mutation = 1f;
+
             buffIcon.gameObject.SetActive(false);
         }
 
@@ -190,27 +218,31 @@ public class AdProgression : MonoBehaviour
     public class Vengence : LiftedTalent
     {
         float
-            mutation = 2f,
+            mutation = .5f,
             duration;
         ArithmeticNode
-            attspeedMult;
+            heroAttspeedMult,
+            followersAttspeedMult;
         MonoBehaviour
             parent;
+        Coroutine
+            endBuffCoroutine;
 
         public Vengence(Image vengenceIcon, MonoBehaviour parent) : base(Hero._Inst)
         {
             this.parent = parent;
 
-            attspeedMult = new ArithmeticNode(new ArithmMult(), 1f);
+            heroAttspeedMult = ArithmeticNode.CreateMult(1f);
+            followersAttspeedMult = ArithmeticNode.CreateMult(1f);
 
-            Hero._Inst.attackSpeed.chain.Add(10, attspeedMult);
-            Followers._Inst.attackSpeed.chain.Add(10, attspeedMult);
+            Hero._Inst.attackSpeed.chain.Add(100, heroAttspeedMult);
+            Followers._Inst.attackSpeed.chain.Add(100, followersAttspeedMult);
 
-            int minutes = 3;
+            int minutes = 1;
             duration = minutes * 60;
 
             InitializeViewValues("Vengeance",
-                                 $"+{mutation-1:P0} attack speed to hero and followers for {minutes} minutes after respawn");
+                                 $"{1/mutation-1f:P0} attack speed to hero and followers for {minutes} minutes after respawn");
 
             buffIcon = vengenceIcon;
             buffIcon.gameObject.SetActive(false);
@@ -223,33 +255,41 @@ public class AdProgression : MonoBehaviour
         protected override void Disconnect()
         {
             SoftReset.onReset -= StartBuff;
+
+            if (endBuffCoroutine != null) parent.StopCoroutine(endBuffCoroutine);
+
             EndBuff();
-            parent.CancelInvoke("EndBuff");
         }
 
 
         private void StartBuff()
         {
-            attspeedMult.Mutation = mutation;
+            heroAttspeedMult.Mutation = mutation;
+            followersAttspeedMult.Mutation = mutation;
 
-            parent.Invoke("EndBuff", duration);
+            endBuffCoroutine = parent.StartCoroutine(CoroutineExtension.InvokeAfter(EndBuff, duration));
 
             buffIcon.gameObject.SetActive(true);
         }
         private void EndBuff()
         {
-            attspeedMult.Mutation = 1f;
+            heroAttspeedMult.Mutation = 1f;
+            followersAttspeedMult.Mutation = 1f;
+
             buffIcon.gameObject.SetActive(false);
         }
+
+
     }
 
     public class GoodFortune : LiftedTalent
     {
+        float reflectChance = .2f;
 
         public GoodFortune(Image goodFortuneIcon): base(Hero._Inst)
         {
             InitializeViewValues("Good Fortune",
-                                 $"20% chance for doom to be reflected back at The Boss.");
+                                 $"{reflectChance:P0} chance for doom to be reflected back at The Boss.");
 
             buffIcon = goodFortuneIcon;
             buffIcon.gameObject.SetActive(false);
@@ -270,7 +310,7 @@ public class AdProgression : MonoBehaviour
 
         private void ReflectDoom(DoDamageArgs dargs)
         {
-            if (dargs.isDoom && UnityEngine.Random.value <= .2f)
+            if (dargs.isDoom && UnityEngine.Random.value <= reflectChance)
             {
                 DoDamageArgs reflectArgs = new DoDamageArgs(dargs.attacker, dargs.damage._Val){ isReflected = true };
 
@@ -288,11 +328,9 @@ public class AdProgression : MonoBehaviour
 
         public SharingLight(Image sharedHealIcon) : base(Hero._Inst)
         {
-            healSpeed = new ArithmeticNode(new ArithmMult(), mutation);
+            unit.healSpeed.chain.Add(10, (healSpeed = ArithmeticNode.CreateMult(1f)));
 
-            unit.healSpeed.chain.Add(10, healSpeed);
-
-            InitializeViewValues("SharingLight",
+            InitializeViewValues("Sharing Light",
                                  $"Healing always affects both Hero and Followers. Also +30% to heal speed.");
 
             buffIcon = sharedHealIcon;
@@ -315,4 +353,63 @@ public class AdProgression : MonoBehaviour
         }
     }
 
+
+    public class LastWishes : LiftedTalent
+    {
+        float
+            healthToShieldRatio = 10f,
+            degradationRatio = .25f,
+            ratio;
+
+        public LastWishes(Image lastWishesIcon) : base(Hero._Inst)
+        {
+            InitializeViewValues("Last Wishes",
+                                 $"After Followers' death Hero recieves protecting barrier.\n"+
+                                 $"Barrier's capacity at first activation is {healthToShieldRatio:P0} of Followers' health\n"+
+                                 $"and it grows {healthToShieldRatio * degradationRatio:P0} weaker with consecutive Followers' deaths."
+                                 );
+
+            buffIcon = lastWishesIcon;
+            buffIcon.gameObject.SetActive(false);
+
+            RestoreBarrierRatio();
+        }
+
+        protected override void Connect()
+        {
+            unit.followers.onDeathChain.Add(MakeBarrier);
+            SoftReset.onReset += RestoreBarrierRatio;
+            Hero._Inst.barrierRange.onLessThanZero += ()=>{ HeroView._Inst.ShowBarrier(false); };
+            buffIcon.gameObject.SetActive(true);
+        }
+
+        protected override void Disconnect()
+        {
+            unit.followers.onDeathChain.Remove(MakeBarrier);
+            SoftReset.onReset -= RestoreBarrierRatio;
+            Hero._Inst.barrierRange.onLessThanZero -= () =>{ HeroView._Inst.ShowBarrier(false); };
+            buffIcon.gameObject.SetActive(false);
+        }
+
+
+        void MakeBarrier(Unit followers)
+        {
+            if (ratio <= 0) return;
+
+            HeroView._Inst.ShowBarrier(true);
+
+            float barrierCapacity = followers.healthRange._Max* ratio;
+
+            unit.barrierRange.Reinitialize(barrierCapacity);
+
+            DegradeBarrierRatio();
+        }
+
+        void DegradeBarrierRatio()
+        {
+            if (ratio > 0)
+                ratio -= healthToShieldRatio * degradationRatio;
+        }
+        void RestoreBarrierRatio() => ratio = healthToShieldRatio;
+    }
 }

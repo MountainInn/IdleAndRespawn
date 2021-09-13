@@ -93,11 +93,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3136536185357766207, guid: a79a6caf4f63b264d89e83873cbf25c8, type: 3}
       propertyPath: m_Name
-      value: DoubleJudgement_Talview
+      value: DoubleReflect_Talview
       objectReference: {fileID: 0}
     - target: {fileID: 3136536185746486107, guid: a79a6caf4f63b264d89e83873cbf25c8, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 048d43ce452f4ec43b264916cec0e0f3, type: 3}
+      objectReference: {fileID: 21300000, guid: 98628a04f903d2b428a7abe991cc197e, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a79a6caf4f63b264d89e83873cbf25c8, type: 3}

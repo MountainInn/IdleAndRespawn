@@ -16,8 +16,6 @@ public class GameSaver : MonoBehaviour
         if (autoSave.Tick())
         {
             saveSystem.SaveGame();
-
-            Debug.Log("Autosave");
         }
     }
 

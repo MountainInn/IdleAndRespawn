@@ -9,24 +9,22 @@ public class TalentTooltip : Tooltip
         lCost;
 
 
-    public Talent talent;
+    public Talent hoveredTalent;
 
     public void SetContent(Talent content)
     {
-        this.talent = content;
-        lName.text = talent.name;
-
-        lCost.text = (talent.isBought) ? "Acquired" : talent.cost.ToString();
+        this.hoveredTalent = content;
+        lName.text = hoveredTalent.name;
     }
 
     void UpdateTalentDescription()
     {
-        lDescription.text = talent.description + talent.updatedDescription;
+        lDescription.text = hoveredTalent.description + hoveredTalent.updatedDescription;
     }
 
     void Update()
     {
-        if (talent != null)
+        if (hoveredTalent != null)
             UpdateTalentDescription();
     }
 

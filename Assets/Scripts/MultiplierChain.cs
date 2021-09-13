@@ -78,14 +78,14 @@ public class ArithmeticChain
             prev = chain.Values[i-1];
             next = chain.Values[i];
 
-            next.Mutate(prev.Val);
+            next.Mutate(prev.Result);
         }
 
         onRecalculateChain?.Invoke();
     }
 
 
-    public float Result => Last.Val;
+    public float Result => Last.Result;
 
     ArithmeticNode Last => chain.Values[chain.Count - 1];
 
@@ -112,15 +112,15 @@ public class ArithmeticNode
     [JsonPropertyAttribute]
     float
         mutation,
-        val;
+        result;
 
     public Action onMutationUpdated;
         
     [OnDeserializedAttribute]
     public void OnDeserialized(StreamingContext context)
     {
-        chain.RecalculateChain(this);
         onMutationUpdated?.Invoke();
+        chain.RecalculateChain(this);
     }
 
     public float Mutation
@@ -136,15 +136,15 @@ public class ArithmeticNode
         }
     }
 
-    public float Val
+    public float Result
     {
-        get => val;
+        get => result;
     }
 
 
     public void Mutate(float previousVal)
     {
-        val = arithm.Mutate(previousVal, mutation);
+        result = arithm.Mutate(previousVal, mutation);
     }
 
 
@@ -157,13 +157,15 @@ public class ArithmeticNode
 
     public ArithmeticNode(float rootVal)
     {
-        this.val = rootVal;
+        this.result = rootVal;
     }
 
     new public string ToString()
     {
-        return $"{( arithm == null ? "root" : arithm.ToString() )} {mutation} = {val}";
+        return $"{( arithm == null ? "root" : arithm.ToString() )} {mutation} = {result}";
     }
+
+    static public ArithmeticNode CreateRoot(float initialValue = 1) => new ArithmeticNode(initialValue);
 
     static public ArithmeticNode CreateMult(float mutation = 1) => new ArithmeticNode(new ArithmMult(), mutation);
 

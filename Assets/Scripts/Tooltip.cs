@@ -35,6 +35,6 @@ public class Tooltip : MonoBehaviour
             );
 
         rectTransform.pivot = pivot;
-        rectTransform.position = ttPosition;
+        rectTransform.position = ttPosition ;
     }
 }

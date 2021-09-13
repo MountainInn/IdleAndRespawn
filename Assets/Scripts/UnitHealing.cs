@@ -1,4 +1,5 @@
 using System;
+using Newtonsoft.Json;
 
 public partial class Unit
 {
@@ -6,6 +7,7 @@ public partial class Unit
     public ActionChain<DoHealArgs> takeHealChain;
     public Action<DoHealArgs> onTakeHeal;
 
+    [JsonPropertyAttribute]
     public bool canRessurect;
 
 

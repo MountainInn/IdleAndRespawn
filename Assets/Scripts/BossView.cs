@@ -5,25 +5,35 @@ public class BossView : UnitView<Boss>
 {
     [SerializeField] Text stageText, reincarnationText;
     [SerializeField] public CanvasGroupFadeInOut bossInterfaceFadeinout;
+    [SerializeField] Material hpMaterial;
+    int oneMinusHealthRatio;
 
     new void Start()
     {
         base.Start();
 
         UpdateStageNumber();
-
         unit.onStageChanged += UpdateStageNumber;
-
         SoftReset.onReset += UpdateStageNumber;
 
-        SoftReset.onBossSpawn += ()=>
+        SoftReset.onReincarnation += () =>
         {
             if (!reincarnationText.gameObject.activeSelf)
                 reincarnationText.gameObject.SetActive(true);
 
-                
+
             UpdateReincarnationNumber();
         };
+
+        oneMinusHealthRatio = Shader.PropertyToID("One_Minus_Health_Ratio");
+    }
+
+    protected override void UpdateHealthBar(float ratio)
+    {
+        float fill = Mathf.Clamp(1f - ratio, 0.001f, 0.999f);
+        hpMaterial.SetFloat(oneMinusHealthRatio, fill);
+
+        healthText.text = FloatExt.BeautifulFormat(unit.healthRange._Val);
     }
 
     void UpdateStageNumber()
@@ -35,5 +45,4 @@ public class BossView : UnitView<Boss>
     {
         reincarnationText.text = "Reincarnation: " + PlayerStats._Inst.bossKilled + 1;
     }
-
 }

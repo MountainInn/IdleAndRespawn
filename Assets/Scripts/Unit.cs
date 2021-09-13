@@ -15,9 +15,10 @@ abstract public partial class Unit : MonoBehaviour
         followers;
 
 
-
     [JsonPropertyAttribute]
-    public Range healthRange;
+    public Range
+        healthRange,
+        barrierRange;
 
     [JsonPropertyAttribute]
     public StatMultChain
@@ -40,9 +41,10 @@ abstract public partial class Unit : MonoBehaviour
         vampirism,
 
         attackSpeed
-        
+
         ;
 
+    public bool hasBlock;
     public bool ableToFight = true;
     public bool Alive => healthRange._Val > 0;
 
@@ -99,6 +101,8 @@ abstract public partial class Unit : MonoBehaviour
 
         InitStats();
 
+        new Attack(this);
+
         OnAwake();
     }
 
@@ -108,8 +112,6 @@ abstract public partial class Unit : MonoBehaviour
     public void AffectHP(float change)
     {
         healthRange._Val += change;
-
-        GameLogger.Logg("health", $"{gameObject.name} {change:+#;-#}");
     }
 
 
@@ -129,7 +131,11 @@ abstract public partial class Unit : MonoBehaviour
 
     protected void FixedUpdate()
     {
-        if (ableToFight && Alive)
+        if (ableToFight &&
+            Alive &&
+            target.ableToFight &&
+            target.Alive
+            )
             timeredActionsList.ForEach(action => action.Invoke());
     }
 
@@ -152,23 +158,34 @@ abstract public partial class Unit : MonoBehaviour
 
     public void CutoffAttackTimer()
     {
-        attackTimer.t = 0f;
+        attackTimer.Reset();
     }
 
     protected IEnumerator RecoverOnRespawn()
     {
-        float missingHP = healthRange._Max - healthRange._Val;
+        float
+            softResetDelta = Time.deltaTime / SoftReset.respawnDuration,
+
+            missingHP = healthRange._Max - healthRange._Val,
+            healthDelta = softResetDelta * missingHP,
+
+            attackTimerDelta = softResetDelta * attackTimer.endTime,
+            healingTimerDelta = softResetDelta * healingTimer.endTime;
         bool
             isHealthMissing,
+            isHealTimerFull,
             isAttackTimerFull;
 
         do
         {
             if (isHealthMissing = ( healthRange._Val < healthRange._Max ))
-                AffectHP( Time.deltaTime / SoftReset.respawnDuration * missingHP );
+                AffectHP(healthDelta);
 
-            if (isAttackTimerFull = (attackTimer.t > 0))
-                attackTimer.t -= Time.deltaTime / SoftReset.respawnDuration * attackTimer.endTime;
+            if (isAttackTimerFull = (attackTimer.T > 0))
+                attackTimer.T -= attackTimerDelta;
+
+            if (healingTimer != null && (isHealTimerFull = (healingTimer.T > 0)))
+                healingTimer.T -= healingTimerDelta;
                 
             yield return new WaitForSeconds(Time.deltaTime);
         }

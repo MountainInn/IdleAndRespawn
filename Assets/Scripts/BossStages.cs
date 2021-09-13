@@ -16,19 +16,20 @@ public partial class Boss
         {
             stageNumber = value;
             OnStageChanged();
-
-            GameLogger.Logg("bossstage", $"{stageNumber}");
         }
     }
 
+    public const short MAX_STAGES_COUNT = 1000;
+
     float
-        stageFraction = 0.0002f,
+        stageFraction,
         stageMult,
         nextStageHealthThreshold,
         toNextStage;
 
+
     int
-        stageSize;
+         stageSize;
 
     [OnDeserializedAttribute]
     public void OnDeserialize_UpdateStages(StreamingContext context)
@@ -69,41 +70,41 @@ public partial class Boss
             transcendedStage;
         float
             healthSnapshot = healthRange._Val,
-            damage = dargs.damage._Val,
+            damageLeft = dargs.damage._Val,
             takenDamage = 0;
 
         UpdateNextStageThreshold(healthSnapshot);
 
         do
         {
-            if (!dargs.isReflected)
+            if (!(dargs.isDiversion || dargs.isReflected))
             {
-                damage -= Mathf.Min(reflect.Result, .35f) * damage;
-                damage = Mathf.Max(0, damage - armor.Result);
+                damageLeft = Mathf.Max(0, damageLeft - armor.Result);
             }
 
-            if (transcendedStage = (damage > toNextStage))
+            if (transcendedStage = (damageLeft > toNextStage))
             {
-                damage = Mathf.Max(0, damage - toNextStage);
+                damageLeft = Mathf.Max(0, damageLeft - toNextStage);
+
                 takenDamage += toNextStage;
 
                 healthSnapshot -= toNextStage;
 
-
                 _StageNumber++;
-
 
                 UpdateNextStageThreshold(healthSnapshot);
             }
         }
-        while (damage > 0 && transcendedStage);
+        while (damageLeft > 0 && healthSnapshot > 0 && transcendedStage);
 
 
-        takenDamage += damage;
+        takenDamage += damageLeft;
 
-        AffectHP(-takenDamage);
+        float nonOverkill = Mathf.Min(healthRange._Val, takenDamage);
 
-        dargs.damage._Val = takenDamage;
+        AffectHP(-nonOverkill);
+
+        dargs.damage._Val = nonOverkill;
     }
 
     public void OnStageChanged()
@@ -125,15 +126,7 @@ public partial class Boss
 
     void UpdateStageMult()
     {
-        int stage = _StageNumber;
-
-        float a = (1 + Mathf.Floor(stage)) / 8f;
-        float b = (1 + Mathf.Floor(stage)) / 2f;
-
-        stageMult = a * b;
-
-        string multstr = stageMult.ToString("##.##", CultureInfo.InvariantCulture);
-        // stage_mult_output += $"({stage},{multstr}),";
+        stageMult = 1 + _StageNumber * Mathf.Log(_StageNumber, 6);
 
         damageMult.Mutation =
             armorMult.Mutation =

@@ -25,6 +25,7 @@ public class Phases : MonoBehaviour
     static public List<Talent> allDiscoveredTalents = new List<Talent>();
     static public List<DamageProcessing> allActiveDamageProcessings = new List<DamageProcessing>();
 
+
     public GameObject
         tier1,
         tier2,
@@ -54,241 +55,116 @@ public class Phases : MonoBehaviour
             {
                 damageProcessings = new DamageProcessing[]
                 {
-                    new Attack(hero),
                     new CriticalHit(hero),
+                    new TakeDamageBarrier(),
                     new TakeDamageFollowers(hero),
-                    new TakeDamageReflect(hero),
                     new TakeDamageArmor(hero),
                     new TakeDamageHealth(hero),
-                    new Healing(hero),
                     new TakeHeal(hero),
 
-                    new Attack(followers),
+                    new CriticalHit(followers),
                     new TakeDamageArmor(followers),
                     new TakeDamageHealth(followers),
                     new TakeHeal(followers),
 
-                    new Attack(boss),
                     new CriticalHit(boss),
-                    new CurseOfDoom(ReferenceHeap._Inst.curseOfDoomProgress)
+                    // new CurseOfDoom(ReferenceHeap._Inst.curseOfDoomProgress)
                 },
 
                 talents = new Talent[]
                 {
-                    new DoubleReflect(hero),
-
                 },
-
                 views = heroInterface.GetComponentsInChildren<Transform>()
                 .Where(tr => tr.GetComponent<TalentView>() == null).ToArray()
             },
-
-            /// Phase 2
-            new Phase(
-                //6
-                0)
-            {
-                damageProcessings = new DamageProcessing[]
-                {
-                },
-
-                talents = new Talent[]
-                {
-                    new LastStand(hero)
-                },
-                
-            },
-
-            /// Phase 3
-            new Phase(
-                //12
-                0)
-            {
-                talents = new Talent[]
-                {
-                    new StaminaTraining(followers),
-                    new FullBlood(hero),
-                },
-                
-
-            },
-
-            /// Phase 4
-            new Phase(
-                //14
-                0)
-            {
-                talents = new Talent[]
-                {
-                    new Infirmary(followers),
+            new Phase(11) {talents = new Talent[] {
+                    new FullBlood(hero)
                 },
             },
-            new Phase(
-                //16
-                0)
-            {
-                talents = new Talent[]
-                {
-                    new TitansGrowth(hero),
+            new Phase(23) {talents = new Talent[] {
+                    new Block(hero),
                 },
-            },new Phase(
-                //18
-                0)
-            {
-                talents = new Talent[]
-                {
-                    new Interruption(hero)
+            },
+            new Phase(34) {talents = new Talent[] {
+                    new Ressurection(hero),
                 },
-            },new Phase(
-                //20
-                0)
-            {
-                talents = new Talent[]
-                {
-                    new BlindingLight(hero)
-                },
-            },new Phase(
-                //22
-                0)
-            {
-                talents = new Talent[]
-                {
+            },
+            new Phase(45) {talents = new Talent[] {
                     new BattleExpirience(hero)
                 },
-            },new Phase(
-                //24
-                0)
-            {
-                talents = new Talent[]
-                {
-                    new FindWeakness(hero)
+            },new Phase(70) {talents = new Talent[] {
+                    new Interruption(hero)
                 },
-            },new Phase(
-                //26
-                0)
-            {
-                talents = new Talent[]
-                {
+            },new Phase(100) {talents = new Talent[] {
+                    new TitansGrowth(hero),
+                    new StaminaTraining(followers)
                 },
-            },new Phase(
-                //28
-                0)
-            {
-                talents = new Talent[]
-                {
-                    new DoubleJudgement(hero)
-                    , new Regeneration(hero)
+            },new Phase(150) {talents = new Talent[] {
+                    new BlindingLight(hero)
                 },
-            },new Phase(
-                //30
-                0)
-            {
-                talents = new Talent[]
-                {
+            },new Phase(160) {talents = new Talent[] {
+                    new Blitz()
+                },
+            },new Phase(190) {talents = new Talent[] {
+                    new Regeneration(hero),
+                },
+            },new Phase(230) {talents = new Talent[] {
                     new CoordinatedActions(followers)
                 },
-            },new Phase(
-                //32
-                0)
-            {
-                talents = new Talent[]
-                {
+            },new Phase(270) {talents = new Talent[] {
                     new Diversion(followers)
                 },
-            },new Phase(
-                //34
-                0)
-            {
-                talents = new Talent[]
-                {
-                    new VeteransOfThirdWar(hero)
-                },
-            },new Phase(
-                //36
-                0)
-            {
-                talents = new Talent[]
-                {
+            },new Phase(300) {talents = new Talent[] {
                     new EnfeeblingStrike(hero)
                 },
-            },new Phase(
-                //38
-                0)
-            {
-                talents = new Talent[]
-                {
-                    new BloodMadness(hero)
-                },
-            },new Phase(
-                //40
-                0)
-            {
-                talents = new Talent[]
-                {
-                    new Ressurection(hero)
-                },
-            },new Phase(
-                //42
-                0)
-            {
-                talents = new Talent[]
-                {
-                    new Rebirth(hero)
-                },
-            },new Phase(
-                //44
-                0)
-            {
-                talents = new Talent[]
-                {
-                    new HotHand(hero)
-                },
-            },new Phase(
-                //46
-                0)
-            {
-                talents = new Talent[]
-                {
-                    new Cyclone(hero)
-                },
-            },new Phase(
-                //48
-                0)
-            {
-                talents = new Talent[]
-                {
+            },new Phase(320) {talents = new Talent[] {
                     new CounterAttack(hero)
                 },
-            },new Phase(
-                //50
-                0)
-            {
-                talents = new Talent[]
-                {
+            },new Phase(360) {talents = new Talent[] {
+                    new Rebirth(hero)
+                },
+            },new Phase(400) {talents = new Talent[] {
+                    new BloodMadness(hero)
+                },
+            }, new Phase(470) {talents = new Talent[] {
                     new Multicrit(hero)
                 },
+            }, new Phase(530) {talents = new Talent[] {
+                    new VeteransOfThirdWar(),
+                },
+            },new Phase(560) {talents = new Talent[] {
+                    new Cyclone(hero)
+                },
+            },new Phase(600) {talents = new Talent[] {
+                    new CounterAttack(hero)
+                },
+            },new Phase(650) {talents = new Talent[] {
+                    new HotHand(hero)
+                },
             }
-            ,new Phase(
-                //52
-                0)
-            {
-                talents = new Talent[]
-                {
+            ,new Phase(700) {talents = new Talent[] {
                     new Dejavu(hero)
                 },
             }
         };
+
+        foreach (var phase in phases)
+        {
+            phase.InitTalentCosts();
+        }
 
         foreach(var item in TalentView.instances )
         {
             item.gameObject.SetActive(false);
         }
 
+        Talent.onActivation += (tal)=>{ allActiveTalents.Add(tal); };
 
         CheckPhase();
         Boss._Inst.onStageChanged += CheckPhase;
     }
 
+    public static Action<Phase> onPhaseActivated;
 
     void CheckPhase()
     {
@@ -297,6 +173,8 @@ public class Phases : MonoBehaviour
             if (!currentPhase.active && currentPhase.CanActivate())
             {
                 currentPhase.ActivatePhase(true);
+
+                onPhaseActivated?.Invoke(currentPhase);
             }
         }
     }
@@ -324,6 +202,14 @@ public class Phases : MonoBehaviour
             onSwitch = default(Action<bool>);
         }
 
+        public void InitTalentCosts()
+        {
+            foreach (var item in talents)
+            {
+                item.SetPhase(border);
+            }
+        }
+
 
         public bool CanActivate()
         {
@@ -347,8 +233,6 @@ public class Phases : MonoBehaviour
             if (talents != null) ActivateTalents();
 
             onSwitch?.Invoke(toggle);
-
-            GameLogger.Logg("phase", $"{border} reached");
         }
 
         private void ActivateTalents()
@@ -356,6 +240,8 @@ public class Phases : MonoBehaviour
             foreach (var item in talents)
             {
                 item.Discover();
+
+                allDiscoveredTalents.Add(item);
             }
         }
 

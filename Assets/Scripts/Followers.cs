@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 [JsonObjectAttribute(MemberSerialization.OptIn)]
@@ -26,17 +26,19 @@ public class Followers : Unit
 
     protected override void FirstInitStats()
     {
-        damage = new StatMultChain(10, 10, 500);
+        damage = new StatMultChain(30, 10, 500);
 
-        attackSpeed = new StatMultChain(3.5f, 0, 0){ isPercentage = true };
+        attackSpeed = new StatMultChain(2, 0, 0){ isPercentage = true };
 
-        InitHealth(200, 100, 600);
+        InitHealth(100, 300, 500);
 
         armor = new StatMultChain(0, 1, 50);
 
-        critChance = new StatMultChain(.01f, 0.01f, 500){ isPercentage = true };
+        reflect = new StatMultChain(0, 0, 0);
 
-        critMult = new StatMultChain(1.2f, .01f, 500){ isPercentage = true };
+        critChance = new StatMultChain(0f, 0f, 500){ isPercentage = true };
+
+        critMult = new StatMultChain(2.0f, .0f, 500){ isPercentage = true };
 
     }
 

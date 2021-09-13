@@ -5,9 +5,9 @@ using Newtonsoft.Json;
 public partial class Boss
 {
 
-    [JsonPropertyAttribute]
     float multOne, multTwo;
 
+    [JsonPropertyAttribute]
     ArithmeticNode
         reincarnationDamageMult,
         reincarnationHealthMult,
@@ -40,9 +40,4 @@ public partial class Boss
         reincarnationAttackSpeedMult.Mutation = multTwo;
     }
 
-
-    void Sub_UpdateReincarnationMult_OnDeath()
-    {
-        onDeathChain.Add((unit)=>UpdateReincarnationMult());
-    }
 }

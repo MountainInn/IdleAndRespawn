@@ -23,6 +23,10 @@ public partial class Hero : Unit
 
         target = Boss._Inst;
         followers = Followers._Inst;
+
+        new Healing(this);
+
+        barrierRange = new Range(0);
     }
 
     [JsonPropertyAttribute]
@@ -32,32 +36,29 @@ public partial class Hero : Unit
 
     override protected void FirstInitStats()
     {
-        damage = new StatMultChain(5, 5, 100);
+        damage = new StatMultChain(25, 5, 100);
 
+        attackSpeed = new StatMultChain(1, 0, 0){isPercentage = true};
 
-        attackSpeed = new StatMultChain(2, 0, 0){isPercentage = true};
+        critChance = new StatMultChain(.05f, 0.01f, 400, limitVal:1f){ isPercentage = true };
 
-        critChance = new StatMultChain(.05f, 0.01f, 500){ isPercentage = true };
-        critChance.SetLimit(1f);
+        critMult = new StatMultChain(1.2f, .01f, 400, limitVal:1.5f){ isPercentage = true };
 
-        critMult = new StatMultChain(1.2f, .01f, 500){ isPercentage = true };
-        critMult.SetLimit(1.5f);
+        reflect = new StatMultChain(3, 3, 200);
 
-        reflect = new StatMultChain(.05f, .01f, 500){ isPercentage = true };
+        armor = new StatMultChain(5, 5, 200);
 
-        armor = new StatMultChain(5, 5, 500);
+        InitHealth(500, 200, 550);
 
-        InitHealth(500, 100, 600);
+        healing = new StatMultChain(20, 4, 100);
 
-        healing = new StatMultChain(5, 3, 50);
+        healSpeed = new StatMultChain(2, 0, 0);
 
-        healSpeed = new StatMultChain(4, 0, 0);
+        vampirism = new StatMultChain(.1f, .035f, 800, limitVal:6f){ isPercentage = true };
 
-        vampirism = new StatMultChain(.1f, .035f, 400){ isPercentage = true };
+        perseverance = new PerseveranceStat(0, 1, 10_000);
 
-        perseverance = new PerseveranceStat(0, 1, 1e6f);
-
-        loyalty = new LoyaltyStat(0, 1, 20000);
+        loyalty = new LoyaltyStat(0, 1, 10_000);
     }
 
     public string StatsString() =>

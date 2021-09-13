@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 [JsonObjectAttribute(MemberSerialization.OptIn)]
 abstract public class Talent : DamageProcessing
 {
+    static public Action<Talent> onActivation;
     TalentView view;
 
     public string
@@ -23,15 +24,16 @@ abstract public class Talent : DamageProcessing
     [JsonPropertyAttribute] public bool isDiscovered, isBought;
 
     [System.Runtime.Serialization.OnDeserializedAttribute]
-    public void OnDeserialized(StreamingContext sc)
+    protected void OnDeserialized(StreamingContext sc)
     {
         if (isBought)
         {
-            new TalentView.BoughtState().Setup(view);
-
             Activate();
         }
+
+       onDeserializedConcrete?.Invoke();
     }
+    protected Action onDeserializedConcrete;
 
     protected Talent(Unit unit) :base(unit)
     {
@@ -48,12 +50,9 @@ abstract public class Talent : DamageProcessing
 
     public void Discover()
     {
-        if (!isDiscovered)
-        {
-            isDiscovered = true;
+        isDiscovered = true;
 
-            new TalentView.DiscoveredState().Setup(view);
-        }
+        view.SwitchState(view.discoveredState);
     }
 
     public void Buy(Currency currency)
@@ -63,11 +62,14 @@ abstract public class Talent : DamageProcessing
             isBought = true;
 
             Activate();
-
-            new TalentView.BoughtState().Setup(view);
-
-            GameLogger.Logg("talent", $"{name} Activated");
         }
+    }
+
+    new public void Activate()
+    {
+        base.Activate();
+        view.SwitchState(view.boughtState);
+        onActivation?.Invoke(this);
     }
 
     public bool CanAfford()
@@ -104,24 +106,30 @@ abstract public class Talent : DamageProcessing
     }
 
 
+    public Talent SetPhase(int phase)
+    {
+        cost = phase * 20;
+        return this;
+    }
+
 }
 
-public class FullBlood : Talent
+public class FullBlood : Talent // Debuged
 {
-    Range hp;
-    float fullBonus = .6f;
+    float fullBonus = 1f;
     float currentBonus;
+
+
 
     public FullBlood(Unit unit) : base(unit)
     {
-        this.hp = unit.healthRange;
-        
         base.InitializeViewValues("Full Blood",
-                                  $"Increases damage based on remaining health.\nFull bonus at full health.",
+                                  $"Increases damage based on remaining health.\nFull bonus at full health",
                                   50);
+
     }
 
-    public override string updatedDescription { get => $"\n({currentBonus:P0}%)"; }
+    public override string updatedDescription { get => $"\n{currentBonus:P0}"; }
 
     [AttackOrder(15)] void Attack_FullBlood(DoDamageArgs damageArgs)
     {
@@ -141,7 +149,8 @@ public class FullBlood : Talent
     }
 }
 
-public class BloodMadness : Talent
+[JsonObjectAttribute(MemberSerialization.OptIn)]
+public class BloodMadness : Talent // Debuged
 {
     [JsonProperty]
     float bonusDamage;
@@ -153,7 +162,7 @@ public class BloodMadness : Talent
         base.InitializeViewValues("Blood Madness",
                                   $"When you leech health you also inflict as much damage to your followers.\n"+
                                 $"You inflict bonus damage with each attack base on damage done to followers this way.\n"+
-                                $"This damage cannot be critical.",
+                                $"This damage cannot be critical",
                                   150);
     }
 
@@ -189,28 +198,25 @@ public class BloodMadness : Talent
     float DamageBonus()
     {
         float log = Mathf.Log(damageToFollowers + 1, 2);
-        return (log*log)/10;
+        return (log*log)/5;
     }
 }
     
 
-public class HotHand : Talent
+public class HotHand : Talent   // Debuged
 {
     float
         critDamageLimitVal = 2.5f,
         selfDamageMult = .15f;
 
-    ArithmeticNode critDamageLimit ;
-
-
     public HotHand(Unit unit) : base(unit)
     {
-        critDamageLimit = unit.critMult.limit;
 
         base.InitializeViewValues("Hot Hand",
-                                  $"Critical damage increased from 150% to {critDamageLimitVal:P0}, but you take 15% of it.",
+                                  $"Hero's critical damage limit \n"
+                                  +$"increased from 150% to {critDamageLimitVal:P0}, but Hero takes 15% of it.\n"
+                                  +$"This damage ignores armor and reflect",
                                   200);
-
     }
     public override string updatedDescription { get => ""; }
 
@@ -229,17 +235,42 @@ public class HotHand : Talent
 
     protected override void SubclassActivation()
     {
-        critDamageLimit.Mutation = critDamageLimitVal;
+        unit.critMult.limitGrowth.Mutation = critDamageLimitVal;
     }
 
     protected override void SubclassDeactivation()
     {
-        critDamageLimit.Mutation = 2.00f;
+        unit.critMult.limitGrowth.Mutation = 1.5f;
+    }
+
+}
+public class Block : Talent // Debuged
+{
+    float
+        chance = .25f,
+        mult = 3f;
+
+    public Block(Unit unit) : base(unit)
+    {
+
+        base.InitializeViewValues("Block",
+                                  $"Hero has {chance:P0} on being hit to defend with double armor",
+                                  1000);
+    }
+
+    public override string updatedDescription { get => ""; }
+
+
+    override protected void SubclassActivation()
+    {
+        unit.hasBlock = true;
+        unit.blockChance = chance;
+        unit.blockMult = mult;
     }
 
 }
 
-public class LastStand : Talent
+public class LastStand : Talent // Debuged
 {
     bool isActive;
     float
@@ -255,31 +286,33 @@ public class LastStand : Talent
         unit.armor.chain.Add(armorBonus);
 
         base.InitializeViewValues("Last Stand",
-                                $"You have {mult - 1f:P0} more armor while below {healthThreshold:P0} health.",
-        100);
+                                  $"You have {mult - 1f:P0} more armor while below {healthThreshold:P0} health",
+                                  100);
 
     }
 
     public override string updatedDescription { get => ""; }
+
+
+    protected override void SubclassActivation()
+    {
+        unit.onDeathChain.Add((unit)=>{ armorBonus.Mutation = 1; });
+    }
     
     [TakeDamageOrder(45)] void Laststand_ActivateBonus(DoDamageArgs damageArgs)
     {
-        if (!isActive && unit.healthRange.GetRatio() < healthThreshold)
-        {
-            armorBonus.Mutation = mult;
-            isActive = true;
-        }
-        else if(isActive && unit.healthRange.GetRatio() >= healthThreshold)
-        {
-            armorBonus.Mutation = 1;
-            isActive = false;
-        }
+        bool underThreshold = unit.healthRange.GetRatio() < healthThreshold;
+
+        if (isActive != underThreshold)
+            armorBonus.Mutation = (underThreshold) ? mult : 1;
+
+        isActive = underThreshold;
     }
 
 }
 
 
-public class FindWeakness : Talent
+public class FindWeakness : Talent // Debuged
 {
     private float critChanceStack = .01f;
     private float totalCritChanceBonus;
@@ -294,12 +327,12 @@ public class FindWeakness : Talent
         unit.critChance.chain.Add(critBonus);
 
         base.InitializeViewValues("Find Weakness",
-                                  $"Critical chance growth by 1% for each non-critical attack.\nResets on crit.'",
+                                  $"Critical chance growth by 1% for each non-critical attack.\nResets on crit.\n",
                                   100);
 
     }
 
-    public override string updatedDescription { get => $"({totalCritChanceBonus}%)"; }
+    public override string updatedDescription { get => $"{totalCritChanceBonus:P0}"; }
 
     [AttackOrder(22)] void Stack_FindWeakness(DoDamageArgs dargs)
     {
@@ -316,21 +349,29 @@ public class FindWeakness : Talent
     }
 }
 
-public class DoubleReflect : Talent
-{
-    float mult = 2f;
 
+public class DoubleJudgement : Talent // Debuged
+{
+    static public Timer timer;
+
+    public int judgementsCount;
+    float judgementDamage;
+
+    float mult = 2f;
     ArithmeticNode reflectMult;
-    
-    public DoubleReflect(Unit unit) : base(unit)
+
+    public DoubleJudgement(Unit unit) : base( unit)
     {
+        timer = new Timer(1);
+
         reflectMult = ArithmeticNode.CreateMult();
 
         unit.reflect.chain.Add(reflectMult);
 
-        base.InitializeViewValues("Double Reflect",
-                                  $"You deal more reflected damage.",
-                                  200);
+        base.InitializeViewValues("Double Judgement",
+                                  $"Hero's reflect is multiplied by {mult:P0} and \n"
+                                  +"strikes second time after short delay",
+                                  100);
 
     }
 
@@ -338,42 +379,17 @@ public class DoubleReflect : Talent
 
     protected override void SubclassActivation()
     {
-        reflectMult.Mutation = mult;
-    }
-
-    protected override void SubclassDeactivation()
-    {
-        reflectMult.Mutation = 1;
-    }
-}
-
-public class DoubleJudgement : Talent
-{
-    public Timer timer;
-
-    public int judgementsCount;
-
-
-    public DoubleJudgement(Unit unit) : base( unit)
-    {
-        timer = new Timer(2);
-
-        base.InitializeViewValues("Double Judgement",
-                                  $"Your reflect strikes second time after short delay.",
-                                  100);
-
-    }
-
-    public override string updatedDescription { get => ""; }
-
-    protected override void SubclassActivation()
-    {
         unit.target.takeDamageChain.Add(41, OnEnemyTookReflectedDamage);
+        reflectMult.Mutation = mult;
     }
 
     void OnEnemyTookReflectedDamage(DoDamageArgs dargs)
     {
-        if (dargs.isReflected) judgementsCount++;
+        if (!dargs.isJudgement && dargs.isReflected)
+        {
+            judgementsCount++;
+            judgementDamage = dargs.damage._Val;
+        }
     }
 
     [TimeredActionsUNOrdered] void Judgement()
@@ -382,18 +398,20 @@ public class DoubleJudgement : Talent
         {
             judgementsCount--;
             
-            DoDamageArgs judgement = DoDamageArgs.CreateReflected(unit, unit.takeDamageReflect.damageReflected);
+            DoDamageArgs judgement =
+                new DoDamageArgs(unit, judgementDamage)
+                { isReflected = true, isJudgement = true };
 
             unit.target.TakeDamage(judgement);
         }
     }
 }
 
-public class MassReflect : Talent
+public class MassReflect : Talent // Debuged
 {
     public MassReflect(Unit unit) : base(unit)
     {
-        base.InitializeViewValues("Mass Reflect", $"Hero's reflect now works with Followers", 1000);
+        base.InitializeViewValues("Mass Reflect", $"Hero's reflect now defends Followers", 1000);
     }
 
     public override string updatedDescription => "";
@@ -403,45 +421,63 @@ public class MassReflect : Talent
     {
         Followers._Inst.reflect = Hero._Inst.reflect;
 
-        Phases.allActiveDamageProcessings.Add(new TakeDamageReflect(Followers._Inst));
+        var takeDamageReflect = new TakeDamageReflect(Followers._Inst);
+
+        takeDamageReflect.Activate();
+
+        Phases.allActiveDamageProcessings.Add(takeDamageReflect);
     }
 }
 
-public class Interruption : Talent
+public class Interruption : Talent // Debuged
 {
     float interrupted;
     
     public Interruption(Hero hero) : base(hero) 
     {
         base.InitializeViewValues("Interruption",
-                                  $"You take half of the damage that your followers would take.",
+                                  $"Hero takes half of the damage that Followers would take, if Hero has more health than Followers",
                                   100);
+
 
     }
     public override string updatedDescription { get => ""; }
 
 
-    [TakeDamageOrder(9)]
-    public void Interrupt(DoDamageArgs damageArgs)
+    override protected void SubclassActivation()
     {
-        if (damageArgs.isReflected) return;
+        unit.followers.takeDamageChain.Add(35, Interrupt);
+        unit.takeDamageChain.Add(15, ConsumeInterruptedDamage);
+    }
+
+    void Interrupt(DoDamageArgs damageArgs)
+    {
+        if (!IsHeroHelthierThanFollowers() && damageArgs.isReflected) return;
 
         interrupted = damageArgs.damage._Val * .5f;
 
         damageArgs.damage._Val -= interrupted;
     }
+    bool IsHeroHelthierThanFollowers()
+    {
+        return Hero._Inst.healthRange._Val > Followers._Inst.healthRange._Val;
+    }
 
-    [TakeDamageOrder(19)]
     void ConsumeInterruptedDamage(DoDamageArgs dargs)
     {
-        dargs.damage._Val += interrupted;
+        if (interrupted > 0)
+        {
+            dargs.damage._Val += interrupted;
+
+            interrupted = 0f;
+        }
     }
 }
 
 
-public class CoordinatedActions : Talent
+public class CoordinatedActions : Talent // Debuged
 {
-    float mult = 3f;
+    float mult = .7f;
 
     ArithmeticNode attackspeedMult;
 
@@ -452,12 +488,12 @@ public class CoordinatedActions : Talent
         unit.attackSpeed.chain.Add(attackspeedMult);
 
         base.InitializeViewValues("Coordinated Actions",
-                                  $"Followers' have more attack speed.",
+                                  $"Followers attack {1f-mult:P0} faster",
                                   100);
 
     }
 
-    public override string updatedDescription { get => "\n({mult:P0})"; }
+    public override string updatedDescription { get => ""; }
 
     protected override void SubclassActivation()
     {
@@ -471,84 +507,37 @@ public class CoordinatedActions : Talent
 
 }
 
-public class Diversion : Talent
+public class Diversion : Talent // Debuged
 {
-    float fraction = 0.05f;
+    float fraction = 0.1f;
     float diversionDamage;
 
     public Diversion(Unit unit ) : base(unit )
     {
         base.InitializeViewValues("Diversion",
-                                  $"Tiny fraction of the damage ignores boss's defences.",
+                                  $"Followers deal extra {fraction:P0} damage which ignores the Boss's defences",
                                   200);
 
     }
-    public override string updatedDescription { get => "\n({fraction}%)"; }
+    public override string updatedDescription { get => $"\n{fraction:P0}"; }
 
-    [AttackOrder(-100)] void SaveDiversionDamage(DoDamageArgs dargs)
+    [AttackOrder(200)] void SaveDiversionDamage(DoDamageArgs dargs)
     {
         diversionDamage = dargs.damage._Val * fraction;
-    }
 
+        DoDamageArgs diversionDargs = new DoDamageArgs(dargs.attacker, diversionDamage){ isDiversion = true };
 
-    [AttackOrder(41)] void DoDiversionDamage(DoDamageArgs dargs)
-    {
-        diversionDamage = Mathf.Min(diversionDamage, dargs.target.healthRange._Val);
-
-        dargs.target.AffectHP(-diversionDamage);
+        dargs.target.TakeDamage(diversionDargs);
     }
 }
 
 
-[JsonObjectAttribute]
-public class StaminaTraining : Talent
-{
-    Timer recalculationTimer;
-
-    ArithmeticNode staminaTrainingMult;
-
-    [System.Runtime.Serialization.OnDeserializedAttribute]
-    public void OnDeserialize(StreamingContext sc)
-    {
-        RecalculateHealthBonus();
-        Debug.Log("Loaded time since last reset: " + SoftReset.TimeSinceLastReset);
-    }
-
-    public StaminaTraining(Unit unit) : base( unit)
-    {
-        recalculationTimer = new Timer(10);
-
-        staminaTrainingMult = ArithmeticNode.CreateMult();
-        unit.health.chain.Add(1000, staminaTrainingMult );
-
-        base.InitializeViewValues("Stamina Training",
-                                  $"Followers' health increases with time from last respawn.",
-                                  300);
-
-    }
-    public override string updatedDescription { get => "\n({healthBonus})"; }
-
-
-    [TimeredActionsUNOrdered] void StaminaTraining_Recalculation()
-    {
-        if (recalculationTimer.Tick()) RecalculateHealthBonus();
-    }
-
-    void RecalculateHealthBonus()
-    {
-        float minutes = SoftReset.TimeSinceLastReset / 60;
-        float log = Mathf.Log(minutes  + 2, 1.8f);
-        staminaTrainingMult.Mutation = 1 + log*log;
-    }
-
-}
-
-public class Regeneration : Talent
+public class Regeneration : Talent // Debuged
 {
     Timer timer;
 
     float
-        regenFraction = 0.005f,
+        regenFraction = 0.01f,
         regenFractionValue;
 
     public Regeneration(Unit unit) : base( unit)
@@ -556,11 +545,11 @@ public class Regeneration : Talent
         timer = new Timer(3);
 
         base.InitializeViewValues("Regeneration",
-                                  $"Every second Hero regenerates some health.",
+                                  $"Every 3 seconds Hero regenerates some health",
                                   200);
 
     }
-    public override string updatedDescription { get => $"\n({regenFractionValue})"; }
+    public override string updatedDescription { get => $"\n({regenFractionValue:F0})"; }
 
 
     [TimeredActionsUNOrdered] void Regeneration_Regenerate()
@@ -569,19 +558,19 @@ public class Regeneration : Talent
         {
             regenFractionValue = unit.healthRange._Max * regenFraction;
 
-            var hargs = new DoHealArgs(unit, regenFractionValue);
+            var hargs = new DoHealArgs(unit, regenFractionValue){ isRegen = true };
 
             unit.TakeHeal(hargs);
         }
     }
 }
 
-public class Infirmary : Talent
+public class Infirmary : Talent // Debuged
 {
     Timer timer;
 
     float
-        regenFraction = 0.005f,
+        regenFraction = 0.01f,
         regenFractionValue;
     
     public Infirmary(Unit unit) : base( unit)
@@ -589,11 +578,11 @@ public class Infirmary : Talent
         timer = new Timer(3);
 
         base.InitializeViewValues("Infirmary",
-                                  $"Every 3 seconds followers regenerate some health if they are alive.",
+                                  $"Every 3 seconds followers regenerate some health if they are alive",
                                   200);
 
     }
-    public override string updatedDescription { get => "\n({regenFractionValue})"; }
+    public override string updatedDescription { get => $"\n({regenFractionValue:F0})"; }
 
 
     [TimeredActionsUNOrdered] void Infirmary_Regenerate()
@@ -602,7 +591,7 @@ public class Infirmary : Talent
         {
             regenFractionValue = unit.healthRange._Max * regenFraction;
 
-            var hargs = new DoHealArgs(unit, regenFractionValue);
+            var hargs = new DoHealArgs(unit, regenFractionValue){ isRegen = true };
 
             unit.TakeHeal(hargs);
         }
@@ -610,54 +599,76 @@ public class Infirmary : Talent
 }
 
 
-public class BlindingLight : Talent
+public class BlindingLight : Talent // Debuged
 {
-    float damageFraction = .15f,
-    damage;
+    float damageFraction = .25f;
 
     public BlindingLight(Unit unit) :base(unit)
     {
         base.InitializeViewValues("Blinding Light",
-                                  $"When you heal you also deal damage to the Boss.",
-                                  300);
-
-    }
-    public override string updatedDescription { get => "\n({damage})"; }
-
-
-    [HealOrder(100)]
-    void BlindingLight_Damage(DoHealArgs healArgs)
-    {
-        damage = healArgs.heal * damageFraction;
-
-        healArgs.healer.target.TakeDamage(new DoDamageArgs(unit, damage));
-    }
-}
-
-
-public class Ressurection : Talent
-{
-    public Ressurection(Unit unit) : base(unit)
-    {
-        base.InitializeViewValues("Ressurection",
-                                  $"Your healing can ressurect followers.",
+                                  $"Boss will take damage equal to {damageFraction:P0} of healing recieved by Hero or Followers",
                                   300);
 
     }
     public override string updatedDescription { get => ""; }
 
-    [StatInitOrder(0)] public void BecomeRessurector(Unit unit)
+
+    protected override void SubclassActivation()
     {
-        unit.canRessurect = true;
+        unit.takeHealChain.Add(200, BlindingLight_Damage);
+        unit.followers.takeHealChain.Add(200, BlindingLight_Damage);
+    }
+
+    void BlindingLight_Damage(DoHealArgs healArgs)
+    {
+        if (healArgs.isHeal)
+        {
+            var dargs = new DoDamageArgs(unit, healArgs.heal * damageFraction){ isBlindingLight = true };
+
+            unit.target.TakeDamage(dargs);
+        }
     }
 }
 
 
-public class BattleExpirience : Talent
+public class Ressurection : Talent // Debuged
+{
+    float mult = 2f;
+
+    ArithmeticNode healingBonus;
+
+    public Ressurection(Unit unit) : base(unit)
+    {
+        base.InitializeViewValues("Ressurection",
+                                  $"Hero can ressurect Followers and healing is {mult-1f:P0} more powerful",
+                                  300);
+
+        unit.healing.chain.Add( healingBonus = ArithmeticNode.CreateMult() );
+    }
+
+    public override string updatedDescription { get => ""; }
+
+    protected override void SubclassActivation()
+    {
+        unit.canRessurect = true;
+        healingBonus.Mutation = mult;
+    }
+
+    protected override void SubclassDeactivation()
+    {
+        unit.canRessurect = false;
+        healingBonus.Mutation = 1f;
+    }
+}
+
+
+[JsonObjectAttribute(MemberSerialization.OptIn)]
+public class BattleExpirience : Talent // Debuged
 {
     LoyaltyStat loyalty;
 
-    float postRespawnBonus;
+    [JsonPropertyAttribute]
+    float damageMutation;
 
     ArithmeticNode damageAddition;
 
@@ -671,138 +682,94 @@ public class BattleExpirience : Talent
 
 
         base.InitializeViewValues("Battle Expirience",
-                                  $"Followers do more damage with each respawn based on loyalty attribute.",
+                                  $"Followers do more damage based on respawn count",
                                   300);
+
+        onDeserializedConcrete = ()=>
+        {
+            damageAddition.Mutation = damageMutation;
+        };
     }
 
-    public override string updatedDescription { get => $"\n({damageAddition.Mutation})"; }
+    public override string updatedDescription { get => $"\n({damageMutation})"; }
 
     protected override void SubclassActivation()
     {
-
-        loyalty.onRecalculate += CalcPostRespawnBonus;
-        SoftReset.onReset += AddBonus;
+        ApplyBonus();
+        SoftReset.onReset += ApplyBonus;
     }
 
     protected override void SubclassDeactivation()
     {
-        loyalty.onRecalculate -= CalcPostRespawnBonus;
-        SoftReset.onReset -= AddBonus;
+        SoftReset.onReset -= ApplyBonus;
     }
 
-    void CalcPostRespawnBonus()
+    void ApplyBonus()
     {
-        float log = Mathf.Log(loyalty.Result + 2, 10);
-
-        postRespawnBonus = 1 + log * log;
-    }
-
-    void AddBonus()
-    {
-        damageAddition.Mutation += postRespawnBonus;
+        damageMutation = SoftReset.respawnCount;
+        damageAddition.Mutation = damageMutation;
     }
 
 }
 
-public class VeteransOfThirdWar : Talent
+public class VeteransOfThirdWar : Talent // Debuged
 {
-    Range follHealth;
     LoyaltyStat loyalty;
-    Unit followers;
 
     Material hpBarMaterial;
 
-    float armorMutation, reflectMutation;
-    ArithmeticNode armorMult, reflectAdd;
+    float armorMutation;
+    ArithmeticNode armorBonus;
 
     bool isVeteransEngaged;
-    DoDamageArgs tempDargs;
 
-    float veteransThreshold;
     static public float veteransRatio = 0f;
     int progressProteryID;
 
-    public VeteransOfThirdWar(Hero hero) : base( hero)
+    public VeteransOfThirdWar() : base(Followers._Inst)
     {
-        progressProteryID = Shader.PropertyToID("_Progress");
+        loyalty = Hero._Inst.loyalty as LoyaltyStat;
 
-        follHealth = hero.followers.healthRange;
-        hpBarMaterial = FollowersView._Inst.healthBar.image.material;
+        armorBonus = ArithmeticNode.CreateMult();
 
-        loyalty = hero.loyalty as LoyaltyStat ;
-
-        hpBarMaterial.SetFloat(progressProteryID, veteransRatio);
-
-        followers = hero.followers;
-
-        armorMult = ArithmeticNode.CreateMult();
-
-        reflectAdd = ArithmeticNode.CreateAdd();
+        unit.armor.chain.Add(1000, armorBonus);
 
 
         base.InitializeViewValues("Veterans Of Third War",
-                                  $"When followers' health drops bellow certain \n"+
-                                  $"threshold, they gain bonus to armor and reflect.\n Threshold is based on Loyalty stat.",
+                                  "",
                                   500);
 
 
-        
+        progressProteryID = Shader.PropertyToID("_Progress");
+
+        hpBarMaterial = FollowersView._Inst.healthBar.image.material;
+        hpBarMaterial.SetFloat(progressProteryID, veteransRatio);
     }
 
-    public override string updatedDescription { get => $"\n(Threshold {veteransThreshold})"+
-            "\n(Reflect bonus {CalculateReflectBonus})"+
-            "\n(Armor bonus {CalculateArmorBonus})"; }
+    public override string updatedDescription { get =>
+            $"When Followers' health drops below {veteransRatio:P0}, they recieve armor bonus.\nThreshold and bonus are based on Loyalty stat.\n\n(Armor bonus {armorMutation-1f:P0})";
+            }
 
 
-    [TakeDamageOrder(15)]
+    [TakeDamageOrder(45)]
     void EngageVeterans(DoDamageArgs dargs)
     {
-        float diff = follHealth._Val - veteransThreshold;
+        bool underThreshold = unit.healthRange.GetRatio() < veteransRatio;
 
-
-        if (diff > 0 &&
-            !isVeteransEngaged &&
-            VeteransGotDamaged(dargs)
-        )
+        if (isVeteransEngaged != underThreshold)
         {
-            follHealth._Val -= diff;
-
-            dargs.damage._Val -= diff;
-
-
-            isVeteransEngaged = true;
-
-            Debug.Log("Veterans go!");
-        
-            armorMult.Mutation = armorMutation;
-            reflectAdd.Mutation = reflectMutation;
-        }
-        else
-        {
-            isVeteransEngaged = false;
-
-            Debug.Log("Veterans retreat!");
-
-            armorMult.Mutation = 1;
-            reflectAdd.Mutation = 0;
+            armorBonus.Mutation = (underThreshold) ? armorMutation : 1;
         }
 
-        bool VeteransGotDamaged(DoDamageArgs dargs)
-        {
-            tempDargs = dargs.CopyShallow();
+        isVeteransEngaged = underThreshold;
 
-            TakeDamageReflect.DecreaseDamage(tempDargs, followers);
-
-            TakeDamageArmor.DecreaseDamage(tempDargs, followers);
-
-
-            return tempDargs.damage._Val > diff;
-        }
     }
 
     override protected void SubclassActivation()
     {
+        RecalculateVeterans();
         loyalty.onRecalculate += RecalculateVeterans;
+        unit.onDeathChain.Add((unit) =>{ armorBonus.Mutation = 1; });
     }
 
     override protected void SubclassDeactivation()
@@ -813,61 +780,56 @@ public class VeteransOfThirdWar : Talent
     private void RecalculateVeterans()
     {
         CalculateThreshold();
-        veteransRatio = veteransThreshold / follHealth._Val;
 
         CalculateArmorBonus();
-        if (isVeteransEngaged) armorMult.Mutation = armorMutation;
 
-        CalculateReflectBonus();
-        if (isVeteransEngaged) reflectAdd.Mutation = reflectMutation;
+        if (isVeteransEngaged) armorBonus.Mutation = armorMutation;
 
         hpBarMaterial.SetFloat(progressProteryID, veteransRatio);
     }
-
     private void CalculateThreshold()
     {
-        veteransThreshold = LoyaltyStat.healthAddition.Mutation;
-    }
-    private void CalculateReflectBonus()
-    {
-        float log = Mathf.Log(loyalty.Result + 2, 2);
-        reflectMutation = ( 1 + log * log )/5;
+        float log = Mathf.Log(loyalty.Result + 2, 10) / 10;
+        veteransRatio = Mathf.Min(1, log);
     }
     private void CalculateArmorBonus()
     {
-        float log = Mathf.Log(loyalty.Result + 2, 2);
-        armorMutation = 1 + log * log;
+        armorMutation = 1 + Mathf.Log(loyalty.Result + 2, 10) / 10;
+        armorBonus.Mutation = armorMutation;
     }
 }
 
-public class Rebirth : Talent
+[JsonObjectAttribute(MemberSerialization.OptIn)]
+public class Rebirth : Talent   // Debuged
 {
     Range health => unit.healthRange;
 
     StatMultChain perseverance;
-    
+
     [JsonProperty]
-    float rebirths;
+    float maxRebirths, rebirths;
 
     public Rebirth(Hero hero) : base( hero)
     {
         perseverance = hero.perseverance;
 
         base.InitializeViewValues("Rebirth",
-                                  $"When your health would drop to zero, you rebirth instead of dying."+
-                                  $"\nAmount of extra lives is based on perseverance attribute.",
+                                  $"When Hero's health would drop to zero,\n"
+                                  +"they rebirth instead of dying.\n"+
+                                  $"Amount of extra lives is based\n"
+                                  +"on perseverance attribute.\n",
                                   1000);
-
     }
-    public override string updatedDescription { get => $"(Extra lives {rebirths})"; }
+    public override string updatedDescription { get =>
+            $"(Max extra lives {maxRebirths:F2})\n(Current extra lives {rebirths:F2})"; }
 
     protected override void SubclassActivation()
     {
         CalculateRebirths();
+        RestoreRebirths();
 
         perseverance.onRecalculate += CalculateRebirths;
-        SoftReset.onReset += CalculateRebirths;
-        SoftReset.onBossSpawn += CalculateRebirths;
+        SoftReset.onReset += RestoreRebirths;
     }
 
     [TakeDamageOrder(39)]
@@ -893,37 +855,44 @@ public class Rebirth : Talent
     void CalculateRebirths()
     {
         float log = Mathf.Log(perseverance.Result + 2, 10);
-        rebirths = 1 + log * log*1.5f;
+        maxRebirths = 1 + log * log*1.5f;
+    }
+
+    void RestoreRebirths()
+    {
+        rebirths = maxRebirths;
     }
 }
 
-public class Dejavu : Talent
+[JsonObjectAttribute(MemberSerialization.OptIn)]
+public class Dejavu : Talent    // Debuged
 {
     StatMultChain perseverance;
 
-    int maxBonusStage = 100;
-
-    float statsFraction;
-
     List<StatMultChain> stats;
-    List<ArithmeticNode> additions;
+    List<ArithmeticNode> multipliers;
 
-    float bonus ;
-    float percentBonus ;
+    [JsonPropertyAttribute]
+    float bonus;
 
     public Dejavu(Hero hero) : base( hero)
     {
         perseverance = hero.perseverance;
 
         base.InitializeViewValues("Dejavu",
-                                  $"You get bonus to all stats based on highest stage and last stage.\n" ,
+                                  $"Hero's stats grow with each respawn.\n",
                                   1000);
 
         InitFields();
+
+        onDeserializedConcrete = () =>
+        {
+            ApplyBonus();
+            Debug.Log("-- Dejavu Loaded");
+        };
     }
 
-    public override string updatedDescription { get => $"(Flat attributes bonus: {bonus})\n"+
-            $"(Percent attributes bonus: {percentBonus})"; }
+    public override string updatedDescription { get => $"{bonus:P3}"; }
 
 
     void InitFields()
@@ -936,86 +905,86 @@ public class Dejavu : Talent
             .ToList();
 
 
-        additions = new List<ArithmeticNode>(stats.Count);
+        multipliers = new List<ArithmeticNode>(stats.Count);
 
         for (int i = 0; i < stats.Count; i++)
         {
-            additions.Add(new ArithmeticNode(new ArithmAdd(), 0));
+            multipliers.Add(ArithmeticNode.CreateMult());
 
-            stats[i].chain.Add(900, additions[i]);
+            stats[i].chain.Add(9000, multipliers[i]);
         }
 
-    }
-
-    void ApplyDejavu()
-    {
-        RecalculateStatBonus();
-
-        for (int i = 0; i < stats.Count; i++)
-        {
-            additions[i].Mutation += (stats[i].isPercentage) ? percentBonus : bonus;
-        }
     }
 
     protected override void SubclassActivation()
     {
-        RecalculateStatBonus();
-        SoftReset.onReset += ApplyDejavu;
-        SoftReset.onBossSpawn += ApplyDejavu;
+        SoftReset.onReset += ()=>{ UpdateBonus(); ApplyBonus(); };
     }
 
     protected override void SubclassDeactivation()
     {
-        SoftReset.onReset -= ApplyDejavu;
-        SoftReset.onBossSpawn -= ApplyDejavu;
     }
     
-    void RecalculateStatBonus()
+    void UpdateBonus()
     {
-        var halfMaxStage = maxBonusStage / 2;
+        float bonusAddition = Mathf.Log(SoftReset.maxStage + 1, 20) / 2e4f;
 
-        var statBonus =
-            Mathf.Pow(SoftReset.lastStage - halfMaxStage, 3)
-            / Mathf.Pow(maxBonusStage, 2);
+        bonus += bonusAddition;
+    }
 
-
-        bonus = Mathf.Ceil(Mathf.Clamp(statBonus, 0.1f, 2));
-        percentBonus = bonus / 1000000;
+    void ApplyBonus()
+    {
+        for (int i = 0; i < stats.Count; i++)
+        {
+            multipliers[i].Mutation = 1 + bonus;
+        }
     }
 }
 
-public class TitansGrowth : Talent
+public class StaminaTraining : TitansGrowth // Debuged
 {
-    ArithmeticNode titansGrowthMult;
+    public StaminaTraining(Unit unit) : base( unit)
+    {
+        base.InitializeViewValues("Stamina Training",
+                                  $"Followers' health increases based on the \ntime since last respawn and respawn count",
+                                  300);
+    }
+}
 
-    Timer recalculationTimer;
+[JsonObjectAttribute(MemberSerialization.OptIn)]
+public class TitansGrowth : Talent // Debug
+{
+    protected ArithmeticNode titansGrowthMult;
+
+    public Timer recalculationTimer;
 
     [JsonProperty]
-    float mult;
+    protected float mult = 1;
 
-    [System.Runtime.Serialization.OnDeserializedAttribute]
-    public void OnDeserialize(StreamingContext sc)
-    {
-        RecalculateHealthMult();
-        Debug.Log("Loaded time since last reset: " + SoftReset.TimeSinceLastReset);
-    }
 
     public TitansGrowth(Unit unit) : base( unit)
     {
-        recalculationTimer = new Timer(60);
+        recalculationTimer = new Timer(10);
 
         titansGrowthMult = ArithmeticNode.CreateMult();
 
         unit.health.chain.Add(1232, titansGrowthMult);
 
         base.InitializeViewValues("Titan's Growth",
-                                  $"Your health increases with time since last respawn ({mult}X)",
+                                  $"Hero's health increases based on the \ntime since last respawn and respawn count",
                                   1000);
+
+        onDeserializedConcrete = ()=>
+        {
+            RecalculateHealthMult();
+            Debug.Log("Loaded time since last reset: " + SoftReset.TimeSinceLastReset);
+        };
+
     }
-    public override string updatedDescription { get => $"({mult}%)"; }
+    public override string updatedDescription { get => $"\n{mult:P0}"; }
 
     [TimeredActionsUNOrdered]
-    void MainRecalculateHealthMult()
+    protected void MainRecalculateHealthMult()
     {
         if (recalculationTimer.Tick())
         {
@@ -1023,11 +992,15 @@ public class TitansGrowth : Talent
         }
     }
 
-    void RecalculateHealthMult()
+    protected void RecalculateHealthMult()
     {
-        float minutes = SoftReset.TimeSinceLastReset / 60;
-        float log = Mathf.Log(minutes + 2, 2);
-        mult = log * log;
+        float
+            minutes = (float)SoftReset.TimeSinceLastReset.TotalMinutes,
+            timeLog = (Mathf.Log(1 + minutes, 2) )/10,
+            maxStageMult = SoftReset.respawnCount/100f;
+
+        mult = 1.15f + timeLog * maxStageMult;
+
         titansGrowthMult.Mutation = mult;
     }
 
@@ -1035,18 +1008,36 @@ public class TitansGrowth : Talent
     {
         RecalculateHealthMult();
         SoftReset.onReset += RecalculateHealthMult;
-        SoftReset.onBossSpawn += RecalculateHealthMult;
+        SoftReset.onReset += recalculationTimer.Reset;
     }
 
     protected override void SubclassDeactivation()
     {
         titansGrowthMult.Mutation = 1;
     }
-
-
 }
 
-public class CounterAttack : Talent
+public class Blitz : Talent
+{
+    float critChance ;
+
+    public Blitz() : base(Followers._Inst)
+    {
+        base.InitializeViewValues("Blitz",
+                                  $"Followers can crit with 15% chance\ndealing {unit.critMult.Result:P0} damage",
+                                  20_000);
+    }
+
+    public override string updatedDescription => string.Empty;
+
+
+    protected override void SubclassActivation()
+    {
+        unit.critChance.basevalue = new ArithmeticNode(critChance);
+    }
+}
+
+public class CounterAttack : Talent // Debuged
 {
     float chance = .2f;
 
@@ -1054,20 +1045,28 @@ public class CounterAttack : Talent
     public CounterAttack(Unit unit) : base( unit)
     {
         base.InitializeViewValues("Counter Attack",
-                                  $"You have {chance:P0} chance to counter attack each time you take damage.",
+                                  $"{chance:P0} chance to counterattack\n"+
+                                  "each time Hero or Followers take damage",
                                   1000);
+
     }
     public override string updatedDescription { get => $""; }
 
 
-    [TakeDamageOrder(0)] void MakeCounterAttack(DoDamageArgs dargs)
+    override protected void SubclassActivation()
     {
-        if (UnityEngine.Random.value < chance)
+        unit.takeDamageChain.Add(0, MakeCounterAttack);
+        unit.followers.takeDamageChain.Add(0, MakeCounterAttack);
+    }
+
+    void MakeCounterAttack(DoDamageArgs dargs)
+    {
+        if (dargs.IsSimpleAttack && UnityEngine.Random.value < chance)
             unit.makeAttack();
     }
 }
 
-public class Cyclone : Talent
+public class Cyclone : Talent   //Debuged
 {
     ArithmeticNode cycloneMult;
 
@@ -1082,11 +1081,11 @@ public class Cyclone : Talent
 
 
         base.InitializeViewValues("Cyclone",
-                                  $"You attack {mult:P0} faster.",
+                                  $"Hero attacks {mult:P0} faster",
                                   300);
 
     }
-    public override string updatedDescription { get => $""; }
+    public override string updatedDescription { get => ""; }
 
 
     protected override void SubclassActivation()
@@ -1101,7 +1100,7 @@ public class Cyclone : Talent
     
 }
 
-public class EnfeeblingStrike : Talent
+public class EnfeeblingStrike : Talent // Debuged
 {
     float mult = .6f;
 
@@ -1114,7 +1113,7 @@ public class EnfeeblingStrike : Talent
                                   500);
 
     }
-    public override string updatedDescription { get => $"After your critical strike Boss' next attack will deal {1 - mult:P0} less damage."; }
+    public override string updatedDescription { get => $"After Hero's critical strike Boss' next attack will deal {1 - mult:P0} less damage"; }
 
     protected override void SubclassActivation()
     {
@@ -1140,23 +1139,26 @@ public class EnfeeblingStrike : Talent
 
     void ConsumeEnfeeble(DoDamageArgs dargs)
     {
-        dargs.damage._Val *= mult;
+        if (isEnemyEnfeebled)
+        {
+            dargs.damage._Val *= mult;
 
-        isEnemyEnfeebled = false;
+            isEnemyEnfeebled = false;
+        }
     }
 }
 
 
-public class Multicrit : Talent
+public class Multicrit : Talent // Debuged
 {
     float critChanceLimitVal = 10f;
 
     public Multicrit(Unit unit) : base( unit)
     {
         base.InitializeViewValues("Multicrit",
-                                  $"Your crit chance now can rise up to {critChanceLimitVal}*hundred %.\n"
-                                  +$"It means you can crit multiple times in one attack.\n"
-                                  +$"These crits stack additively.",
+                                  $"Hero's critical chance limit equals {critChanceLimitVal:P0}.\n"
+                                  +"This enables Hero to crit multiple times per attack\n"
+                                  +"Damage bonus from multiple crits stacks additively",
                                   3000);
     }
     public override string updatedDescription { get => $""; }
@@ -1164,12 +1166,13 @@ public class Multicrit : Talent
 
     protected override void SubclassActivation()
     {
-        unit.critChance.limit.Mutation = critChanceLimitVal;
+        unit.critChance.limitGrowth.Mutation = critChanceLimitVal;
     }
 
     protected override void SubclassDeactivation()
     {
-        unit.critChance.limit.Mutation = 1f;
+        unit.critChance.limitGrowth.Mutation = 1f;
     }
 
 }
+

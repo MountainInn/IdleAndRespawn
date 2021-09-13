@@ -5,7 +5,12 @@ public class DoHealArgs
     public Unit followers => healer.followers;
 
     public float heal;
-    
+
+
+    public bool
+        isHeal,
+        isRegen,
+        isVamp;
 
     public DoHealArgs(Unit healer, float heal)
     {

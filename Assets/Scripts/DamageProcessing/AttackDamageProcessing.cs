@@ -25,7 +25,7 @@ public class CriticalHit : DamageProcessing
                 totalCritMult += critMult - 1f;
             }
 
-			critChance -= 1f;
+            critChance -= 1f;
         }
         while (critChance > 0f);
 
