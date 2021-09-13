@@ -13,11 +13,24 @@ public class Vault : MonoBehaviour
     static public Currency
         expirience,
         talentPoints,
-        soulshard;
-    [SerializeField] Text expirienceView, talentPointsView, soulshardView;
-    [SerializeField] FloatingTextMaker expEarn, talEarn, soulshardEarn;
+        soulshard,
+        soulEnergy;
+    [SerializeField]
+    Text
+        expirienceView,
+        talentPointsView,
+        soulshardView,
+        soulenergyView;
+    [SerializeField]
+    FloatingTextMaker
+        expEarn,
+        talEarn,
+        soulshardEarn,
+        soulEnergyEarn;
     [SerializeField, SpaceAttribute]
-    GameObject bossSoulsViewParent;
+    GameObject
+        soulshardIncome,
+        bossSoulsViewParent;
 
     void Awake()
     {
@@ -27,7 +40,6 @@ public class Vault : MonoBehaviour
 
         InitView(expirienceView, expEarn, expirience);
         InitView(talentPointsView, talEarn, talentPoints);
-        // InitView(soulshardView, soulshardEarn, soulshard);
 
         bossSoulsViewParent.SetActive(false);
     }
@@ -54,6 +66,19 @@ public class Vault : MonoBehaviour
     static public void ActivateBossSoulsView()
     {
         if (!_Inst.bossSoulsViewParent.activeSelf)
+        {
             _Inst.bossSoulsViewParent.SetActive(true);
+
+            _Inst.InitializeSouls();
+        }
     }
+
+    void InitializeSouls()
+    {
+        InitView(soulshardView, soulshardEarn, soulshard);
+        InitView(soulenergyView, soulEnergyEarn, soulEnergy);
+
+        soulshardIncome.SetActive(true);
+    }
+
 }
