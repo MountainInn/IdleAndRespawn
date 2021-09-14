@@ -33,10 +33,10 @@ public partial class Boss
     void UpdateReincarnationMult()
     {
         multOne = Mathf.Max(1, PlayerStats._Inst.bossKilled * 10);
-        multTwo = Mathf.Max(0.6f, (1f - PlayerStats._Inst.bossKilled * 0.05f));
-
         reincarnationDamageMult.Mutation = multOne;
         reincarnationHealthMult.Mutation = multOne;
+
+        multTwo = Mathf.Max(0.6f, (1f - PlayerStats._Inst.bossKilled * 0.05f));
         reincarnationAttackSpeedMult.Mutation = multTwo;
     }
 

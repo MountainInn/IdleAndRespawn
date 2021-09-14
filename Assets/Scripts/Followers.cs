@@ -26,11 +26,11 @@ public class Followers : Unit
 
     protected override void FirstInitStats()
     {
-        damage = new StatMultChain(30, 10, 500);
+        damage = new StatMultChain(40, 10, 500);
 
         attackSpeed = new StatMultChain(2, 0, 0){ isPercentage = true };
 
-        InitHealth(100, 300, 500);
+        InitHealth(100, 300, 350);
 
         armor = new StatMultChain(0, 1, 50);
 

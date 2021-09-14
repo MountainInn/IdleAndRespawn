@@ -36,7 +36,7 @@ public partial class Hero : Unit
 
     override protected void FirstInitStats()
     {
-        damage = new StatMultChain(25, 5, 100);
+        damage = new StatMultChain(35, 5, 100);
 
         attackSpeed = new StatMultChain(1, 0, 0){isPercentage = true};
 
@@ -48,7 +48,7 @@ public partial class Hero : Unit
 
         armor = new StatMultChain(5, 5, 200);
 
-        InitHealth(500, 200, 550);
+        InitHealth(500, 200, 350);
 
         healing = new StatMultChain(20, 4, 100);
 

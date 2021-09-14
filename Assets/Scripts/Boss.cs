@@ -114,7 +114,9 @@ public partial class Boss : Unit
     override protected void FirstInitStats()
     {
         damage = new StatMultChain(// 2.1f
-            88, 0, 0);
+
+            1 // 60
+            , 0, 0);
 
         attackSpeed = new StatMultChain(3, 0, 0){ isPercentage = true };
 
@@ -122,9 +124,12 @@ public partial class Boss : Unit
 
         critMult = new StatMultChain(1.5f, .01f, 500){ isPercentage = true };
 
-        armor = new StatMultChain(23, 0, 0);
+        armor = new StatMultChain(
+        // 40
+        0
+        , 0, 0);
 
-        InitHealth(1e7f, 0, 0);
+        InitHealth(1e4f, 0, 0);
 
         reflect = new StatMultChain(0, 0, 0);
     }

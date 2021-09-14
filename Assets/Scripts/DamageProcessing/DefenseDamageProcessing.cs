@@ -63,11 +63,24 @@ public class TakeDamageHealth : DamageProcessing
         if (dargs.damage._Val < 1) return;
 
 
-        float nonOverkill = Mathf.Min(dargs.damage._Val, unit.healthRange._Val );
+        float nonOverkill = Mathf.Min(dargs.damage._Val, unit.healthRange._Val);
 
         unit.AffectHP(-nonOverkill);
 
-        dargs.damage._Val = nonOverkill;
+        /// Заспавнить текст урона
+        var nonOverkillDargs = dargs.CopyShallow();
+        nonOverkillDargs.damage._Val = nonOverkill;
+        unit.onTakeDamage.Invoke(nonOverkillDargs);
+
+
+        /// Вампиризм
+        if (nonOverkillDargs.IsSimpleAttack && nonOverkillDargs.attacker.vampirism != null)
+        {
+            nonOverkillDargs.attacker.Vamp(nonOverkillDargs);
+        }
+
+        /// Убрать часть урона, поглощенную здоровьем
+        dargs.damage._Val -= nonOverkill;
     }
 }
 public class TakeDamageReflect : DamageProcessing
@@ -120,17 +133,7 @@ public class TakeDamageFollowers : DamageProcessing
     {
         if (followers.Alive && !dargs.isHotHanded)
         {
-            float fullDamage = dargs.damage._Val;
-
-            float healthBefore = followers.healthRange._Val;
-
-
             followers.TakeDamage(dargs);
-
-
-            float folowersTakenDamage = healthBefore - followers.healthRange._Val;
-
-            dargs.damage._Val = fullDamage - folowersTakenDamage;
         }
     }
 }

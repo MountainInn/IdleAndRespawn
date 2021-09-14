@@ -11,13 +11,7 @@ public partial class Unit
         takeDamageChain.Invoke(damageArgs);
 
         
-        onTakeDamage?.Invoke(damageArgs);
 
-
-        if (damageArgs.IsSimpleAttack && damageArgs.attacker.vampirism != null)
-        {
-            damageArgs.attacker.Vamp(damageArgs);
-        }
     }
     
 

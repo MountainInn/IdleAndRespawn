@@ -77,7 +77,7 @@ public partial class Boss
 
         do
         {
-            if (!(dargs.isDiversion || dargs.isReflected))
+            if (!(dargs.isDiversion || dargs.isReflected || dargs.isBlindingLight))
             {
                 damageLeft = Mathf.Max(0, damageLeft - armor.Result);
             }
@@ -126,7 +126,7 @@ public partial class Boss
 
     void UpdateStageMult()
     {
-        stageMult = 1 + _StageNumber * Mathf.Log(_StageNumber, 6);
+        stageMult = 1 + _StageNumber * Mathf.Log(_StageNumber + 2, 10);
 
         damageMult.Mutation =
             armorMult.Mutation =

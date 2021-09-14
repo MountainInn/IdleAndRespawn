@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 public class AutoPlayTest : MonoBehaviour
 {
-    public static float timeScale = 20f;
+    public float timeScale = 20f;
 
     FileWriter logger;
 

@@ -15,7 +15,7 @@ public class SoftReset : MonoBehaviour
     static public Action<int>
         onMaxStageChanged;
 
-    static public float respawnDuration = 2;
+    static public float respawnDuration = 1f;
 
     [JsonPropertyAttribute] static public int respawnCount = 0;
 
@@ -103,15 +103,7 @@ public class SoftReset : MonoBehaviour
     
     static void StagesToTalentPoints()
     {
-        // var halfMaxStage = maxStage / 2;
-
-        // var talentPoints =
-        //     Mathf.Pow(Boss._Inst._StageNumber - halfMaxStage, 3)
-        //     / Mathf.Pow(maxStage, 2) * 10;
-
-        // talentPoints = Mathf.Ceil(Mathf.Clamp(talentPoints, 1, float.MaxValue));
-
-        var talentPoints = Boss._Inst._StageNumber;
+        var talentPoints = Boss._Inst._StageNumber * 4;
 
         Vault.talentPoints.Earn(talentPoints);
     }

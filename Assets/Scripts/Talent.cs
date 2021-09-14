@@ -452,7 +452,7 @@ public class Interruption : Talent // Debuged
 
     void Interrupt(DoDamageArgs damageArgs)
     {
-        if (!IsHeroHelthierThanFollowers() && damageArgs.isReflected) return;
+        if (!IsHeroHelthierThanFollowers() || damageArgs.isReflected) return;
 
         interrupted = damageArgs.damage._Val * .5f;
 
@@ -460,7 +460,7 @@ public class Interruption : Talent // Debuged
     }
     bool IsHeroHelthierThanFollowers()
     {
-        return Hero._Inst.healthRange._Val > Followers._Inst.healthRange._Val;
+        return Followers._Inst.Alive && Hero._Inst.healthRange._Val > Followers._Inst.healthRange._Val;
     }
 
     void ConsumeInterruptedDamage(DoDamageArgs dargs)
