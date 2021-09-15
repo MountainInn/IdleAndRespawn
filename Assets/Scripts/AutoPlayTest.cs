@@ -31,8 +31,8 @@ public class AutoPlayTest : MonoBehaviour
         talentBuys.Sort(
         delegate (TalentView a, TalentView b)
         {
-                    if (a.thisTalent.cost < b.thisTalent.cost) return -1;
-                    else if (a.thisTalent.cost == b.thisTalent.cost) return 0;
+                    if (a.thisTalent.vendible.price < b.thisTalent.vendible.price) return -1;
+                    else if (a.thisTalent.vendible.price == b.thisTalent.vendible.price) return 0;
                     else return 1;
             });
 

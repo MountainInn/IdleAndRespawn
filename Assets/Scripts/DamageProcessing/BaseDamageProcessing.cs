@@ -27,7 +27,7 @@ abstract public class DamageProcessing
 
     
 
-    public void Activate()
+    protected void Activate()
     {
         if (!CanActivate()) return;
         

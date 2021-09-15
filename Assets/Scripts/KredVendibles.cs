@@ -52,57 +52,6 @@ public class KredVendibles : MonoBehaviour
     }
 
 
-    abstract public class Vendible
-    {
-        public float price;
-
-        public Action onBought;
-
-
-        virtual public void Buy(Currency currency)
-        {
-            if (CanBuy(currency))
-            {
-                OnBought();
-
-                onBought?.Invoke();
-            }
-        }
-
-        virtual public bool CanBuy(Currency currency)
-        {
-            return (currency >= price);
-        }
-
-        abstract protected void OnBought();
-    }
-
-    [JsonObjectAttribute(MemberSerialization.OptIn)]
-    abstract public class OneTimeVendible : Vendible
-    {
-        [JsonPropertyAttribute]
-        public bool isOwned;
-
-        public OneTimeVendible()
-        {
-            onBought += ()=>{ isOwned = true; };
-        }
-
-        [OnDeserializedAttribute]
-        public void OnDeserialized(StreamingContext streamingContext)
-        {
-            if (isOwned)
-            {
-                OnBought();
-                onBought?.Invoke();
-            }
-        }
-
-        override public bool CanBuy(Currency currency)
-        {
-            return !isOwned && (currency >= price);
-        }
-    }
 
     abstract public class KredVendible : OneTimeVendible
     {
@@ -172,4 +121,67 @@ public class KredVendibles : MonoBehaviour
 
 
 
+}
+
+public class Vendible
+{
+    public float price;
+
+    public Action onBought;
+
+
+    virtual public void Buy(Currency currency)
+    {
+        if (CanBuy(currency))
+        {
+            OnBought();
+
+            onBought?.Invoke();
+        }
+    }
+
+    virtual public bool CanBuy(Currency currency)
+    {
+        return (currency >= price);
+    }
+
+    virtual protected void OnBought(){}
+}
+
+[JsonObjectAttribute(MemberSerialization.OptIn)]
+public class OneTimeVendible : Vendible
+{
+    [JsonPropertyAttribute]
+    public bool isOwned;
+
+    public OneTimeVendible()
+    {
+    }
+
+    [OnDeserializedAttribute]
+    public void OnDeserialized(StreamingContext streamingContext)
+    {
+        if (isOwned)
+        {
+            OnBought();
+            onBought?.Invoke();
+        }
+    }
+
+    virtual public void Buy(Currency currency)
+    {
+        if (CanBuy(currency))
+        {
+            isOwned = true;
+
+            OnBought();
+
+            onBought?.Invoke();
+        }
+    }
+
+    override public bool CanBuy(Currency currency)
+    {
+        return !isOwned && (currency >= price);
+    }
 }

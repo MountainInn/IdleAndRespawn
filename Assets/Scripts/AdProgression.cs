@@ -436,22 +436,21 @@ abstract public class LiftedTalent : Talent, ILifted
 
 
     public int floor { get; set; }
-    bool _islifted;
     [JsonPropertyAttribute]
-    public bool isLifted { get => _islifted; set
-        {
-            _islifted = value;
+    public bool isLifted {get; set;}
 
-            if (_islifted) OnLifted();
+    [OnDeserializedAttribute]
+    new public void OnDeserialized(StreamingContext streamingContext)
+    {
+        base.OnDeserialized(streamingContext);
 
-            if (base.isBought) base.Activate();
-        }
+        if (isLifted && !vendible.isOwned) OnLifted();
     }
 
     public void OnLifted()
     {
-        base.Discover();
-	}
+        Discover();
+    }
 
     public void OnDropped() {}
 

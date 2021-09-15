@@ -150,11 +150,11 @@ public class TalentView : ViewClass
 
         private void BuyTalent()
         {
-            view.thisTalent.Buy(Vault.talentPoints);
+            view.thisTalent.vendible.Buy(Vault.talentPoints);
         }
         void OnPointerEnter()
         {
-            view.talentTooltip.lCost.text = view.thisTalent.cost.ToStringFormatted();
+            view.talentTooltip.lCost.text = view.thisTalent.vendible.price.ToStringFormatted();
         }
 
         void OnCurrencyChanged(float currencyChanged)

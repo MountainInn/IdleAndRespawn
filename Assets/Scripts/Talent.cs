@@ -10,28 +10,33 @@ using Newtonsoft.Json;
 [JsonObjectAttribute(MemberSerialization.OptIn)]
 abstract public class Talent : DamageProcessing
 {
-    static public Action<Talent> onActivation;
-    TalentView view;
-
+    static public Action<Talent>
+        onActivation;
+    protected Action
+        onDeserializedConcrete;
+    TalentView
+        view;
     public string
         name = "*PLACEHOLDER*",
         description = "*PLACEHOLDER*";
+    abstract public string
+        updatedDescription {get;}
+    public OneTimeVendible
+        vendible;
 
-    abstract public string updatedDescription {get;}
-
-    public float cost;
-
-    [JsonPropertyAttribute] public bool isDiscovered, isBought;
+    [JsonPropertyAttribute] public bool isDiscovered;
 
     [System.Runtime.Serialization.OnDeserializedAttribute]
     protected void OnDeserialized(StreamingContext sc)
     {
        onDeserializedConcrete?.Invoke();
     }
-    protected Action onDeserializedConcrete;
 
     protected Talent(Unit unit) :base(unit)
     {
+        vendible = new OneTimeVendible();
+        vendible.onBought = Activate;
+
         FindView();
     }
 
@@ -39,28 +44,18 @@ abstract public class Talent : DamageProcessing
     {
         this.name = name;
         this.description = description;
-        this.cost = cost;
     }
 
 
     public void Discover()
     {
         isDiscovered = true;
-
         view.SwitchState(view.discoveredState);
     }
 
-    public void Buy(Currency currency)
-    {
-        if (!isBought && currency.Buy(cost))
-        {
-            isBought = true;
-
-            Activate();
-        }
-    }
-
-    new public void Activate()
+    override public bool CanActivate()
+        => vendible.isOwned;
+    new protected void Activate()
     {
         base.Activate();
         view.SwitchState(view.boughtState);
@@ -68,14 +63,7 @@ abstract public class Talent : DamageProcessing
     }
 
     public bool CanAfford()
-    {
-        return Vault.talentPoints.CanAfford(cost);
-    }
-
-    override public bool CanActivate()
-    {
-        return isBought;
-    }
+        => vendible.CanBuy(Vault.talentPoints);
 
 
     void FindView()
@@ -90,11 +78,6 @@ abstract public class Talent : DamageProcessing
             return;
         }
 
-        ConnectToView(view);
-    }
-
-    void ConnectToView(TalentView view)
-    {
         this.view = view;
 
         view.ConnectToTalent(this);
@@ -103,7 +86,7 @@ abstract public class Talent : DamageProcessing
 
     public Talent SetPhase(int phase)
     {
-        cost = phase * 20;
+        vendible.price = phase * 20;
         return this;
     }
 }
@@ -461,29 +444,6 @@ public class DoubleJudgement : LiftedTalent // Debuged
     }
 }
 
-public class MassReflect : LiftedTalent // Debuged
-{
-    public MassReflect(Unit unit) : base(unit)
-    {
-        base.InitializeViewValues("Mass Reflect", $"Hero's reflect now defends Followers", 1000);
-    }
-
-    public override string updatedDescription => "";
-
-
-    protected override void Connect()
-    {
-        Followers._Inst.reflect = Hero._Inst.reflect;
-
-        var takeDamageReflect = new TakeDamageReflect(Followers._Inst);
-
-        takeDamageReflect.Activate();
-    }
-
-    protected override void Disconnect()
-    {
-    }
-}
 
 public class Interruption : LiftedTalent // Debuged
 {
