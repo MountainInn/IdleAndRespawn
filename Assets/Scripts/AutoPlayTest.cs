@@ -84,7 +84,7 @@ public class LogPhases : FileWriter
     {
         OpenNewLog("Phase 0");
 
-        Phases.onPhaseActivated += OnPhaseActivated;
+        Phases._Inst.liftTalents.onLifted += (liftedTalent) => { OnPhaseActivated(liftedTalent.floor); };
     }
 
     override public void Dispose()
@@ -98,11 +98,11 @@ public class LogPhases : FileWriter
         base.Dispose();
     }
 
-    void OnPhaseActivated(Phases.Phase phase)
+    void OnPhaseActivated(int stage)
     {
         WriteLastLog();
-
-        OpenNewLog($"Phase {phase.border}");
+        
+        OpenNewLog($"Phase {stage}");
     }
 
     void WriteLastLog()

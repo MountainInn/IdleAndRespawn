@@ -6,9 +6,10 @@ public class CriticalHit : DamageProcessing
 {
     public CriticalHit(Unit unit) : base(unit)
     {
+        unit.attackChain.Add(20, CriticalRoll);
     }
 
-    [AttackOrder(20)] void CriticalRoll(DoDamageArgs dargs)
+    void CriticalRoll(DoDamageArgs dargs)
     {
         float critChance = unit.critChance.Result;
 

@@ -15,7 +15,11 @@ public class BattleExpiriense : MonoBehaviour
     }
     void UpdateExpPerHit()
     {
-        expPerHit = Mathf.Floor(flatExp + SoftReset.maxStage * maxStageToExpMult);
+        float
+            stageComponent = SoftReset.maxStage * maxStageToExpMult,
+            fragsComponent = 1 + Hero._Inst.frags * .1f;
+
+        expPerHit = Mathf.Floor(flatExp + stageComponent * fragsComponent);
     }
 
     static public void MakeExpiriense(DoDamageArgs damageArgs)

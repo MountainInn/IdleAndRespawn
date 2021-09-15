@@ -125,18 +125,16 @@ public class TalentView : ViewClass
 
         public override void Setup()
         {
+            Debug.Log(view.thisTalent.name +"'s view set to Discovered");
+
             view.button.onClick.AddListener(BuyTalent);
             view.updateOnPointerEnter = OnPointerEnter;
             view.updateOnCurrencyChanged = OnCurrencyChanged;
 
 
-            view.talentTooltip.lCost.text = view.thisTalent.cost.ToStringFormatted();
-
             if (view.isNewopened)
                 NewopenFlare._Inst.OnNewTalentOpened(view.newopenFlareImage);
 
-
-            OnPointerEnter();
 
             view.gameObject.SetActive(true);
 
@@ -183,6 +181,9 @@ public class TalentView : ViewClass
 
         public override void Setup()
         {
+            Debug.Log(view.thisTalent.name + "'s view set to Bought");
+
+
             view.updateOnPointerEnter = OnPointerEnter;
             view.updateOnCurrencyChanged = null;
 

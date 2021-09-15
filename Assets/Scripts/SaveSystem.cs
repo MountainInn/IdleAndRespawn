@@ -53,6 +53,8 @@ public class SaveSystem : MonoBehaviour
                      JsonConvert.SerializeObject(Vault._Inst, settings));
             Surround("AdProgression",
                      JsonConvert.SerializeObject(AdProgression._Inst, settings));
+            Surround("Tutorial",
+                     JsonConvert.SerializeObject(Tutorial._Inst, settings));
 
             writer.WriteEndObject();
 
@@ -79,34 +81,36 @@ public class SaveSystem : MonoBehaviour
 
         JObject save = JObject.Parse(json);
 
+
         JsonConvert.PopulateObject(save["Hero"].ToString(), Hero._Inst);
         JsonConvert.PopulateObject(save["Boss"].ToString(), Boss._Inst);
+        JsonConvert.PopulateObject(save["Vault"].ToString(), Vault._Inst);
+        JsonConvert.PopulateObject(save["Tutorial"].ToString(), Tutorial._Inst);
         JsonConvert.PopulateObject(save["Followers"].ToString(), Followers._Inst);
         JsonConvert.PopulateObject(save["SoftReset"].ToString(), SoftReset._Inst);
-        JsonConvert.PopulateObject(save["Vault"].ToString(), Vault._Inst);
         JsonConvert.PopulateObject(save["AdProgression"].ToString(), AdProgression._Inst);
 
-        talents = save["Phases"]["allActiveTalents"].Children();
+        talents = save["Phases"]["liftTalents"]["floorValues"].Children();
 
-        LoadTalents(Phases.allActiveTalents);
+        LoadTalents();
     }
     
-    void LoadTalents(List<Talent> allActiveTalents)
+    void LoadTalents()
     {
-        var allDiscoveredTalents = new List<Talent>(Phases.allDiscoveredTalents);
+        var allTalents = new List<Talent>(Phases._Inst.liftTalents.floors.Values);
 
         foreach(var item in talents)
         {
             var typeName = item["$type"].Value<string>().Split(',')[0];
 
-            var loadedTalent = allDiscoveredTalents.FirstOrDefault(t => t.GetType().Name == typeName);
+            var loadedTalent = allTalents.FirstOrDefault(t => t.GetType().Name == typeName);
 
 
             if (loadedTalent != default)
             {
                 JsonConvert.PopulateObject(item.ToString(), loadedTalent);
 
-                allDiscoveredTalents.Remove(loadedTalent);
+                allTalents.Remove(loadedTalent);
             }
         }
     }

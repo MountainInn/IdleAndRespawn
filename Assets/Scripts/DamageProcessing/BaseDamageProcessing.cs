@@ -33,7 +33,7 @@ abstract public class DamageProcessing
         
         Type thisType = this.GetType();
 
-        SubclassActivation();
+        Connect();
 
         IncludeMethodsInChains(true, thisType);
 
@@ -44,13 +44,13 @@ abstract public class DamageProcessing
 
     }
 
-    protected virtual void SubclassActivation(){}
+    protected virtual void Connect(){}
 
     public void Deactivate()
     {
         Type thisType = this.GetType();
 
-        SubclassDeactivation();
+        Disconnect();
         
         IncludeMethodsInChains(true, thisType);
 
@@ -67,7 +67,7 @@ abstract public class DamageProcessing
         }
     }
 
-    protected virtual void SubclassDeactivation() {}
+    protected virtual void Disconnect() {}
 
     void IncludeMethodsInChains(bool toggle, Type thisType)
     {
@@ -287,8 +287,10 @@ public class Healing : DamageProcessing
     public void MakeHealing()
     {
         var healArgs = new DoHealArgs(unit, unit.healing.Result){ isHeal = true };
-        
-        target.TakeHeal(healArgs);
+
+		unit.healingChain.Invoke(healArgs);
+
+		target.TakeHeal(healArgs);
     }
 }
 
@@ -297,14 +299,17 @@ public class TakeHeal : DamageProcessing
 {
     public TakeHeal(Unit unit) : base( unit)
     {
-        unit.takeHealChain.Add(TakeHeal_);    
+        unit.takeHealChain.Add(100, TakeHeal_);
     }
 
     void TakeHeal_(DoHealArgs hargs)
     {
         float missingHP = unit.healthRange._Max - unit.healthRange._Val;
 
-        hargs.heal = Mathf.Min(missingHP, hargs.heal);
-        unit.AffectHP(hargs.heal);
+        float nonOverheal = Mathf.Min(missingHP, hargs.heal);
+
+        unit.AffectHP(nonOverheal);
+
+        hargs.heal -= nonOverheal;
     }
 }

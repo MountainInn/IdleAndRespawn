@@ -138,14 +138,14 @@ PrefabInstance:
     - target: {fileID: 6285307927554616381, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 23bd590f0ded5534180e79fb3b592f62, type: 3}
+      objectReference: {fileID: 21300000, guid: fd6cd08d25264c0479a4f29d9cb3a003, type: 3}
     - target: {fileID: 6333189804783406239, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: fd6cd08d25264c0479a4f29d9cb3a003, type: 3}
+      objectReference: {fileID: 21300000, guid: 23bd590f0ded5534180e79fb3b592f62, type: 3}
     - target: {fileID: 6333189805178286587, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
       propertyPath: m_Name
-      value: BloodMadness_Talview
+      value: Transfusion_Talview
       objectReference: {fileID: 0}
     - target: {fileID: 6336365007991614309, guid: 3e1a6f7c058472b498b9e4b2211cc4f2, type: 3}
       propertyPath: m_Text

@@ -15,15 +15,7 @@ public class BossView : UnitView<Boss>
         UpdateStageNumber();
         unit.onStageChanged += UpdateStageNumber;
         SoftReset.onReset += UpdateStageNumber;
-
-        SoftReset.onReincarnation += () =>
-        {
-            if (!reincarnationText.gameObject.activeSelf)
-                reincarnationText.gameObject.SetActive(true);
-
-
-            UpdateReincarnationNumber();
-        };
+        Hero.onFragsUpdated += UpdateReincarnationNumber;
 
         oneMinusHealthRatio = Shader.PropertyToID("One_Minus_Health_Ratio");
     }
@@ -41,8 +33,12 @@ public class BossView : UnitView<Boss>
         stageText.text = "Stage: " + unit._StageNumber.ToString();
     }
 
-    void UpdateReincarnationNumber()
+
+    void UpdateReincarnationNumber(int frags)
     {
-        reincarnationText.text = "Reincarnation: " + PlayerStats._Inst.bossKilled + 1;
+        if (!reincarnationText.gameObject.activeSelf)
+                reincarnationText.gameObject.SetActive(true);
+
+        reincarnationText.text = "Reincarnation: " + frags;
     }
 }

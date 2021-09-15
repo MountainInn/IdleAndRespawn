@@ -34,7 +34,6 @@ public class Advertisement : MonoBehaviour
 
     public void AdWatched()
     {
-        Debug.Log("AdWATCHED");
         onWatched?.Invoke();
     }
 

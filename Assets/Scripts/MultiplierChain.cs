@@ -109,20 +109,13 @@ public class ArithmeticNode
 
     Arithm arithm;
 
-    [JsonPropertyAttribute]
     float
         mutation,
         result;
 
     public Action onMutationUpdated;
-        
-    [OnDeserializedAttribute]
-    public void OnDeserialized(StreamingContext context)
-    {
-        onMutationUpdated?.Invoke();
-        chain.RecalculateChain(this);
-    }
 
+    [JsonPropertyAttribute]
     public float Mutation
     {
         get => mutation;

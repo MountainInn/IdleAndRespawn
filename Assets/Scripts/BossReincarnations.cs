@@ -14,11 +14,20 @@ public partial class Boss
         reincarnationAttackSpeedMult;
 
 
+    void AwakeReincarnations()
+    {
+        InitReincarnationMult();
+        AddReincarnationMult();
+
+        UpdateReincarnationMult(Hero._Inst.frags);
+        Hero.onFragsUpdated += UpdateReincarnationMult;
+    }
+
     void InitReincarnationMult()
     {
-        reincarnationDamageMult = new ArithmeticNode(new ArithmMult(), multOne);
-        reincarnationHealthMult = new ArithmeticNode(new ArithmMult(), multOne);
-        reincarnationAttackSpeedMult = new ArithmeticNode(new ArithmMult(), multTwo);
+        reincarnationDamageMult = ArithmeticNode.CreateMult();
+        reincarnationHealthMult = ArithmeticNode.CreateMult();
+        reincarnationAttackSpeedMult = ArithmeticNode.CreateMult();
     }
 
 
@@ -30,13 +39,13 @@ public partial class Boss
     }
 
 
-    void UpdateReincarnationMult()
+    void UpdateReincarnationMult(int frags)
     {
-        multOne = Mathf.Max(1, PlayerStats._Inst.bossKilled * 10);
+        multOne = Mathf.Max(1, frags * 10);
         reincarnationDamageMult.Mutation = multOne;
         reincarnationHealthMult.Mutation = multOne;
 
-        multTwo = Mathf.Max(0.6f, (1f - PlayerStats._Inst.bossKilled * 0.05f));
+        multTwo = Mathf.Max(0.6f, (1f - frags * 0.05f));
         reincarnationAttackSpeedMult.Mutation = multTwo;
     }
 

@@ -13,9 +13,26 @@ public partial class Hero : Unit
     static Hero inst;
     static public Hero _Inst => inst??=GameObject.FindObjectOfType<Hero>();
 
+    static public Action<int> onFragsUpdated;
+    int _frags;
+    [JsonPropertyAttribute]
+    public int frags {
+        get => _frags;
+        set
+        {
+            _frags = value;
+
+            onFragsUpdated.Invoke(_frags);
+        }
+    }
 
     new public static List<Hero> _Instances = new List<Hero>();
 
+    [OnDeserializedAttribute]
+    public void OnDeserialized(StreamingContext context)
+    {
+        if (frags > 0) Vault.ActivateBossSoulsView();
+    }
 
     protected override void OnAwake()
     {
@@ -24,7 +41,14 @@ public partial class Hero : Unit
         target = Boss._Inst;
         followers = Followers._Inst;
 
+        new TakeDamageBarrier();
+        new TakeDamageFollowers(this);
+        new TakeDamageArmor(this);
+        new TakeDamageHealth(this);
+
         new Healing(this);
+        new CriticalHit(this);
+        new TakeHeal(this);
 
         barrierRange = new Range(0);
     }
@@ -46,9 +70,9 @@ public partial class Hero : Unit
 
         reflect = new StatMultChain(3, 3, 200);
 
-        armor = new StatMultChain(5, 5, 200);
+        armor = new StatMultChain(10, 8, 200);
 
-        InitHealth(500, 200, 350);
+        InitHealth(500, 500, 350);
 
         healing = new StatMultChain(20, 4, 100);
 

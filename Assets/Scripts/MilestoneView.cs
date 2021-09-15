@@ -13,14 +13,14 @@ public class MilestoneView :MonoBehaviour
         selfImage = GetComponent<Image>();
     }
 
-    public void SetView(int level, AdProgression.LiftedTalent ADTalent)
+    public void SetView(int level, AdTalent ADTalent)
     {
         levelTxt.text = level.ToString();
 
         UpdateView(ADTalent);
     }
 
-    public void UpdateView(AdProgression.LiftedTalent ADTalent)
+    public void UpdateView(AdTalent ADTalent)
     {
         nameTxt.text = ADTalent.name;
 

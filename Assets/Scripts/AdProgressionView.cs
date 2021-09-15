@@ -17,7 +17,7 @@ public class AdProgressionView : MonoBehaviour
 
     int maxLevel;
 
-    Dictionary<AdProgression.LiftedTalent, MilestoneView> milestones = new Dictionary<AdProgression.LiftedTalent, MilestoneView>();
+    Dictionary<AdTalent, MilestoneView> milestones = new Dictionary<AdTalent, MilestoneView>();
     
 
     void SubscribeToAdvertisement()
@@ -82,7 +82,7 @@ public class AdProgressionView : MonoBehaviour
         }
     }
 
-    public void UpdateMilestones(AdProgression.LiftedTalent liftedTalent)
+    public void UpdateMilestones(AdTalent liftedTalent)
     {
         milestones[liftedTalent].SetReachedColor();
         milestones[liftedTalent].UpdateView(liftedTalent);

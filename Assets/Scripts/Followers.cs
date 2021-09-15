@@ -17,6 +17,12 @@ public class Followers : Unit
 
 
         target = GameObject.FindObjectOfType<Boss>();
+
+        new CriticalHit(this);
+        new TakeDamageArmor(this);
+        new TakeDamageHealth(this);
+        new TakeHeal(this);
+
     }
 
     void Start()
@@ -30,7 +36,7 @@ public class Followers : Unit
 
         attackSpeed = new StatMultChain(2, 0, 0){ isPercentage = true };
 
-        InitHealth(100, 300, 350);
+        InitHealth(100, 350, 350);
 
         armor = new StatMultChain(0, 1, 50);
 

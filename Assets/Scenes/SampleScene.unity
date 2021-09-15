@@ -1869,9 +1869,11 @@ MonoBehaviour:
     hints:
     - targets:
       - {fileID: 1322962120}
-      hintStr: 'You killed your first boss
-
-        *PLACEHOLDER*'
+      hintStr: "At last, after the long lasting battle, the Boss is defeated.\r\nBut
+        the Hero and their Followers didn't have a chance to celebrate their victory,
+        \nas the Boss broken body moved up into the air\r\nand became whole again.\r\nIt
+        turns out, just before their defeat, the Boss bound their soul\r\nto a phylactery
+        which is maintains the Boss' life now.\r"
       hintPivot: 0
     alreadySeen: 0
   isFirstTutorialSeen: 0
@@ -8502,7 +8504,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12edfc6537f00f941b4122945a9f310e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossKilled: 0
 --- !u!4 &1601230293
 Transform:
   m_ObjectHideFlags: 0
@@ -9869,10 +9870,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68d641bce569d8d4c89939e3096c55cd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tier1: {fileID: 2069388699}
-  tier2: {fileID: 1048182455}
-  tier3: {fileID: 2100575992}
-  heroInterface: {fileID: 690713981}
 --- !u!4 &1848705690
 Transform:
   m_ObjectHideFlags: 0

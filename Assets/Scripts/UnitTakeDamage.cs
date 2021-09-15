@@ -9,9 +9,6 @@ public partial class Unit
     public void TakeDamage(DoDamageArgs damageArgs)
     {
         takeDamageChain.Invoke(damageArgs);
-
-        
-
     }
     
 

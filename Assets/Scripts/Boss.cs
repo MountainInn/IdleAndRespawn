@@ -4,6 +4,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using Newtonsoft.Json;
+using System.Runtime.Serialization;
 
 [JsonObjectAttribute(MemberSerialization.OptIn)]
 public partial class Boss : Unit
@@ -33,9 +34,7 @@ public partial class Boss : Unit
 
         AddStageMult();
 
-        InitReincarnationMult();
-        AddReincarnationMult();
-        UpdateReincarnationMult();
+        AwakeReincarnations();
 
 
         onTakeDamage +=
@@ -53,11 +52,11 @@ public partial class Boss : Unit
         SoftReset.onReset += ()=>{ ShieldHide(); };
 
         onDeathChain.Add(100, (unit)=>{ SoftReset.reincarnation.Invoke(); });
+
     }
 
     void Start()
     {
-        UpdateReincarnationMult();
         UpdateStageMult();
     }
 
@@ -76,16 +75,15 @@ public partial class Boss : Unit
 
         ableToFight = false;
 
+        CutoffAttackTimer();
 
         yield return view.bossInterfaceFadeinout.FadingOut();
 
-        CutoffAttackTimer();
 
-        RegisterDeath();
+        Hero._Inst.frags++;
 
         yield return wait;
 
-        UpdateReincarnationMult();
         Respawn();
 
         yield return wait;
@@ -96,13 +94,6 @@ public partial class Boss : Unit
         ableToFight = true;
     }
 
-    void RegisterDeath()
-    {
-        /// Покажу когда будут готовы награды за души
-        // Vault.bossSouls.Earn(bossSoulsReward);
-
-        PlayerStats._Inst.bossKilled++;
-    }
 
     public void Respawn()
     {
@@ -115,7 +106,7 @@ public partial class Boss : Unit
     {
         damage = new StatMultChain(// 2.1f
 
-            1 // 60
+            60
             , 0, 0);
 
         attackSpeed = new StatMultChain(3, 0, 0){ isPercentage = true };
@@ -125,11 +116,10 @@ public partial class Boss : Unit
         critMult = new StatMultChain(1.5f, .01f, 500){ isPercentage = true };
 
         armor = new StatMultChain(
-        // 40
-        0
+        2
         , 0, 0);
 
-        InitHealth(1e4f, 0, 0);
+        InitHealth(1e6f, 0, 0);
 
         reflect = new StatMultChain(0, 0, 0);
     }

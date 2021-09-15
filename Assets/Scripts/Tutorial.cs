@@ -111,10 +111,16 @@ public class Tutorial : MonoBehaviour
     }
     
 
-    void Pause() => Time.timeScale = 0;
-
-    void Unpause() => Time.timeScale = 1f;
-
+    float backupTimeScale = 1;
+    void Pause()
+    {
+        backupTimeScale = Time.timeScale;
+        Time.timeScale = 0;
+    }
+    void Unpause()
+    {
+        Time.timeScale = backupTimeScale;
+    }
 
     void PopulateTutorialList()
     {

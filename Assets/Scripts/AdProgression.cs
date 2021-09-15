@@ -54,8 +54,8 @@ public class AdProgression : MonoBehaviour
     ArithmeticNode
         heroArmorMult, heroDamageMult,
         followersArmorMult, followersDamageMult;
-    public Lift<LiftedTalent>
-        liftTalents = new Lift<LiftedTalent>();
+    public Lift<AdTalent>
+        liftTalents = new Lift<AdTalent>();
 
     [SerializeField] AdProgressionView view;
     Animation flareAnimation;
@@ -122,45 +122,8 @@ public class AdProgression : MonoBehaviour
 
 
 
-    abstract public class LiftedTalent : Talent, ILifted
-    {
-        protected Image buffIcon;
 
-        public LiftedTalent(Unit unit) : base(unit){}
-
-        public override string updatedDescription => throw new NotImplementedException();
-
-        public string realDescription, hiddenDescription;
-        public void InitializeViewValues(string name, string description)
-        {
-            this.name = name;
-
-            realDescription = description;
-
-            hiddenDescription = realDescription.HideString();
-
-            base.description = hiddenDescription;
-        }
-
-        public void OnLifted()
-        {
-            Connect();
-
-            base.description = realDescription;
-        }
-
-        public void OnDropped()
-        {
-            Disconnect();
-
-            base.description = hiddenDescription;
-        }
-
-        abstract protected void Connect();
-        abstract protected void Disconnect();
-    }
-
-    public class Inspiration : LiftedTalent
+    public class Inspiration : AdTalent
     {
         float mutation = 1.1f;
         ArithmeticNode heroDamageMult, followersDamageMult;
@@ -215,7 +178,7 @@ public class AdProgression : MonoBehaviour
         public override string updatedDescription => throw new System.NotImplementedException();
     }
 
-    public class Vengence : LiftedTalent
+    public class Vengence : AdTalent
     {
         float
             mutation = .5f,
@@ -282,7 +245,7 @@ public class AdProgression : MonoBehaviour
 
     }
 
-    public class GoodFortune : LiftedTalent
+    public class GoodFortune : AdTalent
     {
         float reflectChance = .2f;
 
@@ -319,7 +282,7 @@ public class AdProgression : MonoBehaviour
         }
     }
 
-    public class SharingLight : LiftedTalent
+    public class SharingLight : AdTalent
     {
         static public bool isSharing;
 
@@ -354,10 +317,10 @@ public class AdProgression : MonoBehaviour
     }
 
 
-    public class LastWishes : LiftedTalent
+    public class LastWishes : AdTalent
     {
         float
-            healthToShieldRatio = 10f,
+            healthToShieldRatio = 1f,
             degradationRatio = .25f,
             ratio;
 
@@ -412,4 +375,84 @@ public class AdProgression : MonoBehaviour
         }
         void RestoreBarrierRatio() => ratio = healthToShieldRatio;
     }
+}
+
+[JsonObjectAttribute(MemberSerialization.OptIn)]
+abstract public class AdTalent : Talent, ILifted
+    {
+        protected Image buffIcon;
+
+        public AdTalent(Unit unit) : base(unit){}
+
+        public override string updatedDescription => throw new NotImplementedException();
+
+
+    public string realDescription, hiddenDescription;
+        public void InitializeViewValues(string name, string description)
+        {
+            this.name = name;
+
+            realDescription = description;
+
+            hiddenDescription = realDescription.HideString();
+
+            base.description = hiddenDescription;
+    }
+
+    public int floor { get; set; }
+    bool _islifted;
+    [JsonPropertyAttribute]
+    public bool isLifted
+    { get => _islifted; set
+        {
+            _islifted = value;
+
+            if (_islifted) OnLifted();
+        }
+    }
+
+        public void OnLifted()
+        {
+            Connect();
+
+            base.description = realDescription;
+        }
+
+        public void OnDropped()
+        {
+            Disconnect();
+
+            base.description = hiddenDescription;
+        }
+
+}
+
+[JsonObjectAttribute(MemberSerialization.OptIn)]
+abstract public class LiftedTalent : Talent, ILifted
+{
+    public LiftedTalent(Unit unit) : base(unit){}
+
+    public override string updatedDescription => throw new NotImplementedException();
+
+
+    public int floor { get; set; }
+    bool _islifted;
+    [JsonPropertyAttribute]
+    public bool isLifted { get => _islifted; set
+        {
+            _islifted = value;
+
+            if (_islifted) OnLifted();
+
+            if (base.isBought) base.Activate();
+        }
+    }
+
+    public void OnLifted()
+    {
+        base.Discover();
+	}
+
+    public void OnDropped() {}
+
 }
