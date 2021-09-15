@@ -51,6 +51,11 @@ public class KredVendibles : MonoBehaviour
         }
     }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> c870829 (Переписал Talent чтобы он включал в себя Vendible)
     abstract public class KredVendible : OneTimeVendible
     {
         public string name, description;
