@@ -51,8 +51,6 @@ public class KredVendibles : MonoBehaviour
         }
     }
 
-
-
     abstract public class KredVendible : OneTimeVendible
     {
         public string name, description;
@@ -168,7 +166,7 @@ public class OneTimeVendible : Vendible
         }
     }
 
-    virtual public void Buy(Currency currency)
+    override public void Buy(Currency currency)
     {
         if (CanBuy(currency))
         {

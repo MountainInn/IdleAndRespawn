@@ -7,10 +7,10 @@ public class KredVendibleView : MonoBehaviour
     [SerializeField] Image icon;
     [SerializeField] Text nameText, desc, price, buttonText;
 
-    KredVendibles.KredVendible good ;
+    KredVendible good ;
 
 
-    public void ConnectVendible(KredVendibles.KredVendible good)
+    public void ConnectVendible(KredVendible good)
     {
         this.good = good;
 

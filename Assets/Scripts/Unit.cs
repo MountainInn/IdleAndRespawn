@@ -44,9 +44,12 @@ abstract public partial class Unit : MonoBehaviour
 
         ;
 
-    public bool hasBlock;
-    public bool ableToFight = true;
-    public bool Alive => healthRange._Val > 0;
+    public bool
+        hasBlock,
+        ableToFight = true,
+        isCasting;
+    public bool
+        Alive => healthRange._Val > 0;
 
     public void InitStats()
     {
