@@ -4,16 +4,19 @@ using Newtonsoft.Json;
 
 
 [JsonObjectAttribute(MemberSerialization.OptIn)]
-abstract public class SoulGrade : Vendible, ILifted
+abstract public class SoulGrade : LiftedTalent
 {
-    public string name, description;
-    protected Unit unit;
     protected uint _level = 0;
 
+    new public Vendible vendible;
 
-#region Vendible
+    public SoulGrade(Unit unit) : base(unit)
+    {
+        vendible.onBought = LevelUp;
+    }
 
-    override protected void OnBought()
+
+    protected void LevelUp()
     {
         Level++;
     }
@@ -29,21 +32,7 @@ abstract public class SoulGrade : Vendible, ILifted
         }
     }
     abstract protected void OnLevelup();
-#endregion
 
-#region ILifted
-
-    bool ILifted.isLifted { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-    int ILifted.floor { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-
-
-    void ILifted.OnDropped() {}
-
-    public void OnLifted()
-    {
-
-    }
-#endregion
 }
 
 
@@ -63,10 +52,8 @@ public class MageBane : SoulGrade
             RecalcBonusDamage();
         }
     }
-    public MageBane()
+    public MageBane() : base(Hero._Inst)
     {
-        unit = Hero._Inst;
-
         name = "MageBane";
         description = "While the Boss casts spell each Hero's attack gives stack of Mage Bane\nand deals extra damage based on these stacks";
     }

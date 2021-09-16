@@ -25,8 +25,6 @@ abstract public class DamageProcessing
         return true;
     }
 
-    
-
     protected void Activate()
     {
         if (!CanActivate()) return;
@@ -34,8 +32,6 @@ abstract public class DamageProcessing
         Type thisType = this.GetType();
 
         Connect();
-
-        IncludeMethodsInChains(true, thisType);
 
         foreach (var button in thisType.GetFields(BindingFlags.Instance).OfType<UpgradeButton>() )
         {
@@ -45,136 +41,8 @@ abstract public class DamageProcessing
     }
 
     protected virtual void Connect(){}
-
-    public void Deactivate()
-    {
-        Type thisType = this.GetType();
-
-        Disconnect();
-        
-        IncludeMethodsInChains(true, thisType);
-
-        foreach (var field in thisType.GetFields(BindingFlags.Instance))
-        {
-            if (field.GetType() == typeof(Unit)) continue;
-
-            if (field.GetType() == typeof(UpgradeButton)) 
-            {
-                ( (UpgradeButton)( field.GetValue(this) ) ).gameObject.SetActive(false);
-            }
-
-            field.SetValue(this, default);
-        }
-    }
-
     protected virtual void Disconnect() {}
-
-    void IncludeMethodsInChains(bool toggle, Type thisType)
-    {
-
-        foreach (var method in thisType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance) )
-        {
-            foreach (Order attr in method.GetCustomAttributes().Where(a => a.GetType().BaseType == typeof( Order )))
-            {
-                if (attr is AttackOrder ato)
-                {
-                    AddOrRemoveMethod(unit.attackChain, ato, method, typeof(Action<DoDamageArgs>), toggle);
-                }
-                else if (attr is TakeDamageOrder tdo)
-                {
-                    AddOrRemoveMethod(unit.takeDamageChain, tdo, method, typeof(Action<DoDamageArgs>), toggle);
-                }
-                else if (attr is VampOrder vo)
-                {
-                    AddOrRemoveMethod(unit.vampChain, vo, method, typeof(Action<DoHealArgs>), toggle);
-                }
-                else if (attr is TakeHealOrder)
-                {
-                    AddOrRemoveMethod(unit.takeHealChain, attr, method, typeof(Action<DoHealArgs>), toggle);
-                }
-                else if (attr is HealOrder ho)
-                {
-                    AddOrRemoveMethod(unit.healingChain, ho, method, typeof(Action<DoHealArgs>), toggle);
-                }
-                else if (attr is StatInitOrder sio)
-                {
-                    AddOrRemoveMethod(unit.statInitChain, sio, method, typeof(Action<Unit>), toggle);
-                }
-                else if (attr is TimeredActionsUNOrdered uNOrdered)
-                {
-                    AddOrRemoveMethod(unit.timeredActionsList, uNOrdered, method, typeof(Action), toggle);
-                }
-                else if (attr is OnDeathOrder)
-                {
-                    AddOrRemoveMethod(unit.onDeathChain, attr, method, typeof(Action<Unit>), toggle);
-                }
-            }
-        }
-
-    }
-
-    void AddOrRemoveMethod<T>(ActionChain<T> chain, Order attribOrder, MethodInfo method, Type delegateType, bool toggle)
-            where T : class
-        {
-            chain
-                .GetType()
-                .GetMethod(toggle ? "Add" : "Remove", new Type[]{ typeof(int), delegateType })
-                .Invoke(
-                    chain,
-                    new object[]
-                    {
-                        attribOrder.order,
-                        method.CreateDelegate(delegateType, this)
-                    });
-
-            }
-    
-    void AddOrRemoveMethod<T>(List<T> list, Order attribOrder, MethodInfo method, Type delegateType, bool toggle)
-            where T : class
-        {
-            list
-                .GetType()
-                .GetMethod(toggle ? "Add" : "Remove")
-                .Invoke(
-                    list,
-                    new object[]
-                    {
-                        method.CreateDelegate(delegateType, this)
-                    });
-            }
 }
-
-abstract public class FollowersHealthTo : DamageProcessing
-{
-    protected Range fHealth;
-    protected float maxHealthMult = 1.50f;
-
-    public FollowersHealthTo(Followers followers, float maxHealthMult) : base(followers)
-    {
-        fHealth = followers.healthRange;
-    }
-
-    protected float GetHealthMult()
-    {
-        return fHealth.GetRatio() * maxHealthMult;
-    }
-}
-
-
-
-public class FollowersHealthToDamage : FollowersHealthTo
-{
-    public FollowersHealthToDamage(Followers followers, float maxHealthMult)
-        : base(followers, maxHealthMult)
-    {
-    }
-
-    [AttackOrder(-20)] void FHealthToDamage(DoDamageArgs dargs)
-    {
-        dargs.damage._Val *= GetHealthMult();
-    }
-}
-
 
 
 public class LoyaltyStat : StatMultChain

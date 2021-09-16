@@ -159,7 +159,7 @@ public class TalentView : ViewClass
 
         void OnCurrencyChanged(float currencyChanged)
         {
-            bool canAfford = view.thisTalent.CanAfford();
+            bool canAfford = view.thisTalent.vendible.CanBuy();
 
             if (canAfford)
             {

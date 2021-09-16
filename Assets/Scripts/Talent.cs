@@ -10,11 +10,11 @@ using Newtonsoft.Json;
 [JsonObjectAttribute(MemberSerialization.OptIn)]
 abstract public class Talent : DamageProcessing
 {
-    static public Action<Talent>
-        onActivation;
     protected Action
-        onDeserializedConcrete;
-    TalentView
+        onDeserializedConcrete,
+        onDiscovered,
+        onActivated;
+    protected TalentView
         view;
     public string
         name = "*PLACEHOLDER*",
@@ -34,13 +34,16 @@ abstract public class Talent : DamageProcessing
 
     protected Talent(Unit unit) :base(unit)
     {
-        vendible = new OneTimeVendible();
+        vendible = new OneTimeVendible(Vault.talentPoints);
         vendible.onBought = Activate;
+
+        onDiscovered = ()=>{ view.SwitchState(view.discoveredState); };
+        onActivated = () =>{ view.SwitchState(view.boughtState); };
 
         FindView();
     }
 
-    protected void InitializeViewValues(string name, string description, float cost)
+    protected void InitializeViewValues(string name, string description)
     {
         this.name = name;
         this.description = description;
@@ -50,7 +53,7 @@ abstract public class Talent : DamageProcessing
     public void Discover()
     {
         isDiscovered = true;
-        view.SwitchState(view.discoveredState);
+        onDiscovered.Invoke();
     }
 
     override public bool CanActivate()
@@ -58,12 +61,8 @@ abstract public class Talent : DamageProcessing
     new protected void Activate()
     {
         base.Activate();
-        view.SwitchState(view.boughtState);
-        onActivation?.Invoke(this);
+        onActivated.Invoke();;
     }
-
-    public bool CanAfford()
-        => vendible.CanBuy(Vault.talentPoints);
 
 
     void FindView()
@@ -101,14 +100,14 @@ public class FullBlood : LiftedTalent // Debuged
     public FullBlood(Unit unit) : base(unit)
     {
         base.InitializeViewValues("Full Blood",
-                                  $"Increases damage based on remaining health.\nFull bonus at full health",
-                                  50);
+                                  $"Increases damage based on remaining health.\nFull bonus at full health");
 
+        unit.attackChain.Add(15, Attack_FullBlood);
     }
 
     public override string updatedDescription { get => $"\n{currentBonus:P0}"; }
 
-    [AttackOrder(15)] void Attack_FullBlood(DoDamageArgs damageArgs)
+    void Attack_FullBlood(DoDamageArgs damageArgs)
     {
         damageArgs.damage._Val *= 1f + currentBonus;
     }
@@ -143,8 +142,7 @@ public class BloodMadness : LiftedTalent // Debuged
         base.InitializeViewValues("Blood Madness",
                                   $"When you leech health you also inflict as much damage to your followers.\n"+
                                 $"You inflict bonus damage with each attack base on damage done to followers this way.\n"+
-                                $"This damage cannot be critical",
-                                  150);
+                                $"This damage cannot be critical");
     }
 
     public override string updatedDescription { get => $"\n({bonusDamage})"; }
@@ -194,8 +192,7 @@ public class Transfusion : LiftedTalent
     public Transfusion() :base(Hero._Inst)
     {
         base.InitializeViewValues("Transfusion",
-                                  $"Hero's vampirism now heals followers instead of Hero if Hero's health is full",
-                                  150);
+                                  $"Hero's vampirism now heals followers instead of Hero if Hero's health is full");
     }
 
     public override string updatedDescription { get => ""; }
@@ -231,8 +228,7 @@ public class HotHand : LiftedTalent   // Debuged
         base.InitializeViewValues("Hot Hand",
                                   $"Hero's critical damage limit \n"
                                   +$"increased from 150% to {critDamageLimitVal:P0}, but Hero takes 15% of it.\n"
-                                  +$"This damage ignores armor and reflect",
-                                  200);
+                                  +$"This damage ignores armor and reflect");
     }
     public override string updatedDescription { get => ""; }
 
@@ -270,8 +266,7 @@ public class Block : LiftedTalent // Debuged
     {
 
         base.InitializeViewValues("Block",
-                                  $"Hero has {chance:P0} on being hit to defend with double armor",
-                                  1000);
+                                  $"Hero has {chance:P0} on being hit to defend with double armor");
     }
 
     public override string updatedDescription { get => ""; }
@@ -305,8 +300,7 @@ public class LastStand : LiftedTalent // Debuged
         unit.armor.chain.Add(armorBonus);
 
         base.InitializeViewValues("Last Stand",
-                                  $"You have {mult - 1f:P0} more armor while below {healthThreshold:P0} health",
-                                  100);
+                                  $"You have {mult - 1f:P0} more armor while below {healthThreshold:P0} health");
 
     }
 
@@ -350,8 +344,7 @@ public class FindWeakness : LiftedTalent // Debuged
         unit.critChance.chain.Add(critBonus);
 
         base.InitializeViewValues("Find Weakness",
-                                  $"Critical chance growth by 1% for each non-critical attack.\nResets on crit.\n",
-                                  100);
+                                  $"Critical chance growth by 1% for each non-critical attack.\nResets on crit.\n");
 
     }
 
@@ -402,8 +395,7 @@ public class DoubleJudgement : LiftedTalent // Debuged
 
         base.InitializeViewValues("Double Judgement",
                                   $"Hero's reflect is multiplied by {mult:P0} and \n"
-                                  +"strikes second time after short delay",
-                                  100);
+                                  +"strikes second time after short delay");
 
     }
 
@@ -452,8 +444,7 @@ public class Interruption : LiftedTalent // Debuged
     public Interruption(Hero hero) : base(hero)
     {
         base.InitializeViewValues("Interruption",
-                                  $"Hero takes half of the damage that Followers would take, if Hero has more health than Followers",
-                                  100);
+                                  $"Hero takes half of the damage that Followers would take, if Hero has more health than Followers");
 
 
     }
@@ -508,8 +499,7 @@ public class CoordinatedActions : LiftedTalent // Debuged
         unit.attackSpeed.chain.Add(attackspeedMult);
 
         base.InitializeViewValues("Coordinated Actions",
-                                  $"Followers attack {1f-mult:P0} faster",
-                                  100);
+                                  $"Followers attack {1f-mult:P0} faster");
 
     }
 
@@ -535,8 +525,7 @@ public class Diversion : LiftedTalent // Debuged
     public Diversion(Unit unit ) : base(unit )
     {
         base.InitializeViewValues("Diversion",
-                                  $"Followers deal extra {fraction:P0} damage which ignores the Boss's defences",
-                                  200);
+                                  $"Followers deal extra {fraction:P0} damage which ignores the Boss's defences");
 
     }
     public override string updatedDescription { get => $"\n{fraction:P0}"; }
@@ -574,8 +563,7 @@ public class Regeneration : LiftedTalent // Debuged
         timer = new Timer(1);
 
         base.InitializeViewValues("Regeneration",
-                                  $"Every {timer.endTime:F0} seconds Hero regenerates some health",
-                                  200);
+                                  $"Every {timer.endTime:F0} seconds Hero regenerates some health");
 
     }
     public override string updatedDescription { get => $"\n({regenFractionValue:F0})"; }
@@ -616,8 +604,7 @@ public class Infirmary : LiftedTalent // Debuged
         timer = new Timer(1);
 
         base.InitializeViewValues("Infirmary",
-                                  $"Every {timer.endTime:F0} seconds followers regenerate some health if they are alive",
-                                  200);
+                                  $"Every {timer.endTime:F0} seconds followers regenerate some health if they are alive");
 
     }
     public override string updatedDescription { get => $"\n({regenFractionValue:F0})"; }
@@ -653,8 +640,7 @@ public class BlindingLight : LiftedTalent // Debuged
     public BlindingLight(Unit unit) :base(unit)
     {
         base.InitializeViewValues("Blinding Light",
-                                  $"Hero's healing deals damage equal to {damageFraction:P0} of healpower",
-                                  300);
+                                  $"Hero's healing deals damage equal to {damageFraction:P0} of healpower");
 
     }
     public override string updatedDescription { get => ""; }
@@ -690,8 +676,7 @@ public class Ressurection : LiftedTalent // Debuged
     public Ressurection(Unit unit) : base(unit)
     {
         base.InitializeViewValues("Ressurection",
-                                  $"Hero can ressurect Followers and healing is {mult-1f:P0} more powerful",
-                                  300);
+                                  $"Hero can ressurect Followers and healing is {mult-1f:P0} more powerful");
 
         unit.healing.chain.Add( healingBonus = ArithmeticNode.CreateMult() );
     }
@@ -732,8 +717,7 @@ public class BattleExpirience : LiftedTalent // Debuged
 
 
         base.InitializeViewValues("Battle Expirience",
-                                  $"Followers do more damage based on respawn count",
-                                  300);
+                                  $"Followers do more damage based on respawn count");
 
         onDeserializedConcrete = ()=>
         {
@@ -786,8 +770,7 @@ public class VeteransOfThirdWar : LiftedTalent // Debuged
 
 
         base.InitializeViewValues("Veterans Of Third War",
-                                  "",
-                                  500);
+                                  "");
 
 
         progressProteryID = Shader.PropertyToID("_Progress");
@@ -867,8 +850,7 @@ public class Rebirth : LiftedTalent   // Debuged
                                   $"When Hero's health would drop to zero,\n"
                                   +"they rebirth instead of dying.\n"+
                                   $"Amount of extra lives is based\n"
-                                  +"on perseverance attribute.\n",
-                                  1000);
+                                  +"on perseverance attribute.\n");
     }
     public override string updatedDescription { get =>
             $"(Max extra lives {maxRebirths:F2})\n(Current extra lives {rebirths:F2})"; }
@@ -935,8 +917,7 @@ public class Dejavu : LiftedTalent    // Debuged
         perseverance = hero.perseverance;
 
         base.InitializeViewValues("Dejavu",
-                                  $"Hero's stats grow with each respawn.\n",
-                                  1000);
+                                  $"Hero's stats grow with each respawn.\n");
 
         InitFields();
 
@@ -1001,8 +982,7 @@ public class StaminaTraining : TitansGrowth // Debuged
     public StaminaTraining(Unit unit) : base( unit)
     {
         base.InitializeViewValues("Stamina Training",
-                                  $"Followers' health increases based on respawn count",
-                                  300);
+                                  $"Followers' health increases based on respawn count");
 
         logMult = .02f;
     }
@@ -1029,8 +1009,7 @@ public class TitansGrowth : LiftedTalent // Debug
         unit.health.chain.Add(1232, titansGrowthMult);
 
         base.InitializeViewValues("Titan's Growth",
-                                  $"Hero's health increases based on respawn count",
-                                  1000);
+                                  $"Hero's health increases based on respawn count");
 
         onDeserializedConcrete = ()=>
         {
@@ -1077,8 +1056,7 @@ public class Blitz : LiftedTalent
     public Blitz() : base(Followers._Inst)
     {
         base.InitializeViewValues("Blitz",
-                                  $"Followers can crit with 15% chance\ndealing {unit.critMult.Result:P0} damage",
-                                  20_000);
+                                  $"Followers can crit with 15% chance\ndealing {unit.critMult.Result:P0} damage");
     }
 
     public override string updatedDescription => string.Empty;
@@ -1103,8 +1081,7 @@ public class CounterAttack : LiftedTalent // Debuged
     {
         base.InitializeViewValues("Counter Attack",
                                   $"{chance:P0} chance to counterattack\n"+
-                                  "each time Hero or Followers take damage",
-                                  1000);
+                                  "each time Hero or Followers take damage");
 
     }
     public override string updatedDescription { get => $""; }
@@ -1142,8 +1119,7 @@ public class Cyclone : LiftedTalent   //Debuged
 
 
         base.InitializeViewValues("Cyclone",
-                                  $"Hero attacks {mult:P0} faster",
-                                  300);
+                                  $"Hero attacks {mult:P0} faster");
 
     }
     public override string updatedDescription { get => ""; }
@@ -1170,8 +1146,7 @@ public class EnfeeblingStrike : LiftedTalent // Debuged
     public EnfeeblingStrike(Unit unit) : base( unit)
     {
         base.InitializeViewValues("Enfeeble",
-                                  $"",
-                                  500);
+                                  $"");
 
     }
     public override string updatedDescription { get => $"After Hero's critical strike Boss' next attack will deal {1 - mult:P0} less damage"; }
@@ -1219,8 +1194,7 @@ public class Multicrit : LiftedTalent // Debuged
         base.InitializeViewValues("Multicrit",
                                   $"Hero's critical chance limit equals {critChanceLimitVal:P0}.\n"
                                   +"This enables Hero to crit multiple times per attack\n"
-                                  +"Damage bonus from multiple crits stacks additively",
-                                  3000);
+                                  +"Damage bonus from multiple crits stacks additively");
     }
     public override string updatedDescription { get => $""; }
 

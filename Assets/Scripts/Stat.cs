@@ -4,46 +4,6 @@ using UnityEngine;
 using System.Runtime.Serialization;
 
 
-public class Order : Attribute
-{
-    public int order;
-    public Order(int order){ this.order = order; }
-}
-
-public sealed class AttackOrder : Order
-{
-    public AttackOrder(int order) : base(order){}
-}
-public sealed class TakeDamageOrder : Order
-{
-    public TakeDamageOrder(int order) : base(order){}
-}
-public sealed class VampOrder : Order
-{
-    public VampOrder(int order) : base(order){}
-}
-public sealed class HealOrder : Order
-{
-    public HealOrder(int order) : base(order){}
-}
-public sealed class TakeHealOrder : Order
-{
-    public TakeHealOrder(int order) : base(order){}
-}
-public sealed class StatInitOrder : Order 
-{
-    public StatInitOrder(int order):base(order){}
-}
-public sealed class TimeredActionsUNOrdered : Order 
-{
-    public TimeredActionsUNOrdered():base(0){}
-}
-public sealed class OnDeathOrder : Order 
-{
-    public OnDeathOrder(int order):base(order){}
-}
-
-[SaveClass]
 public class Stat
 {
     public int level;

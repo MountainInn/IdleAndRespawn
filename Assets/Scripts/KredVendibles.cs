@@ -132,10 +132,16 @@ public class Vendible
 
     public Action onBought;
 
+    protected Currency currency;
 
-    virtual public void Buy(Currency currency)
+    public Vendible(Currency currency)
     {
-        if (CanBuy(currency))
+        this.currency = currency;
+    }
+
+    virtual public void Buy()
+    {
+        if (CanBuy())
         {
             OnBought();
 
@@ -143,7 +149,7 @@ public class Vendible
         }
     }
 
-    virtual public bool CanBuy(Currency currency)
+    virtual public bool CanBuy()
     {
         return (currency >= price);
     }
@@ -157,7 +163,7 @@ public class OneTimeVendible : Vendible
     [JsonPropertyAttribute]
     public bool isOwned;
 
-    public OneTimeVendible()
+    public OneTimeVendible(Currency currency) : base(currency)
     {
     }
 
@@ -171,9 +177,9 @@ public class OneTimeVendible : Vendible
         }
     }
 
-    override public void Buy(Currency currency)
+    override public void Buy()
     {
-        if (CanBuy(currency))
+        if (CanBuy())
         {
             isOwned = true;
 
@@ -183,7 +189,7 @@ public class OneTimeVendible : Vendible
         }
     }
 
-    override public bool CanBuy(Currency currency)
+    override public bool CanBuy()
     {
         return !isOwned && (currency >= price);
     }
