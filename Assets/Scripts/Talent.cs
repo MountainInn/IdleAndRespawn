@@ -23,6 +23,8 @@ abstract public class Talent : DamageProcessing
         updatedDescription {get;}
     public OneTimeVendible
         vendible;
+    public Lifted
+        lifted;
 
     [JsonPropertyAttribute] public bool isDiscovered;
 
@@ -30,14 +32,21 @@ abstract public class Talent : DamageProcessing
     protected void OnDeserialized(StreamingContext sc)
     {
        onDeserializedConcrete?.Invoke();
+
+       if (vendible.isOwned) vendible.onBought.Invoke();
+       else if (lifted.isLifted) lifted.OnLifted();
     }
 
     protected Talent(Unit unit) :base(unit)
     {
+        lifted = new Lifted();
+        lifted.onLifted += Discover;
+
+        onDiscovered = () =>{ view.SwitchState(view.discoveredState); };
+
         vendible = new OneTimeVendible(Vault.talentPoints);
         vendible.onBought = Activate;
 
-        onDiscovered = ()=>{ view.SwitchState(view.discoveredState); };
         onActivated = () =>{ view.SwitchState(view.boughtState); };
 
         FindView();
@@ -129,61 +138,6 @@ public class FullBlood : LiftedTalent // Debuged
     }
 }
 
-[JsonObjectAttribute(MemberSerialization.OptIn)]
-public class BloodMadness : LiftedTalent // Debuged
-{
-    [JsonProperty]
-    float bonusDamage;
-    [JsonProperty]
-    float damageToFollowers;
-
-    public BloodMadness(Unit unit) :base(unit)
-    {
-        base.InitializeViewValues("Blood Madness",
-                                  $"When you leech health you also inflict as much damage to your followers.\n"+
-                                $"You inflict bonus damage with each attack base on damage done to followers this way.\n"+
-                                $"This damage cannot be critical");
-    }
-
-    public override string updatedDescription { get => $"\n({bonusDamage})"; }
-
-    protected override void Connect()
-    {
-        Hero._Inst.followers.takeDamageChain.Add(0, HarvestBonus);
-    }
-
-    [AttackOrder(100)] void BloodMadness_AddDamage(DoDamageArgs damageArgs)
-    {
-        damageArgs.damage._Val += bonusDamage;
-    }
-
-    [VampOrder(20)] void BloodMad_DamageFollowers(DoHealArgs healArgs)
-    {
-        if (Hero._Inst.followers.Alive)
-            Hero._Inst.followers.TakeDamage(
-
-                new DoDamageArgs(healArgs.healer, healArgs.heal){isBloodMadness = true});
-    }
-
-    void HarvestBonus(DoDamageArgs damageArgs)
-    {
-        if (damageArgs.isBloodMadness)
-        {
-            damageToFollowers += damageArgs.damage._Val;
-            bonusDamage = DamageBonus();
-        }
-    }
-
-    float DamageBonus()
-    {
-        float log = Mathf.Log(damageToFollowers + 1, 2);
-        return (log*log)/5;
-    }
-
-    protected override void Disconnect()
-    {
-    }
-}
 
 public class Transfusion : LiftedTalent
 {
@@ -232,7 +186,7 @@ public class HotHand : LiftedTalent   // Debuged
     }
     public override string updatedDescription { get => ""; }
 
-    [AttackOrder(30)] void Hothanded_DamageSelf(DoDamageArgs damageArgs)
+    void Hothanded_DamageSelf(DoDamageArgs damageArgs)
     {
         if (damageArgs.isCritical)
         {
@@ -248,6 +202,7 @@ public class HotHand : LiftedTalent   // Debuged
     protected override void Connect()
     {
         unit.critMult.limitGrowth.Mutation = critDamageLimitVal;
+        unit.attackChain.Add(30, Hothanded_DamageSelf);
     }
 
     protected override void Disconnect()
@@ -310,13 +265,14 @@ public class LastStand : LiftedTalent // Debuged
     protected override void Connect()
     {
         unit.onDeathChain.Add((unit)=>{ armorBonus.Mutation = 1; });
+        unit.takeDamageChain.Add(45, Laststand_ActivateBonus);
     }
 
     protected override void Disconnect()
     {
     }
 
-    [TakeDamageOrder(45)] void Laststand_ActivateBonus(DoDamageArgs damageArgs)
+    void Laststand_ActivateBonus(DoDamageArgs damageArgs)
     {
         bool underThreshold = unit.healthRange.GetRatio() < healthThreshold;
 
@@ -371,68 +327,6 @@ public class FindWeakness : LiftedTalent // Debuged
         }
 
         critBonus.Mutation = totalCritChanceBonus;
-    }
-}
-
-
-public class DoubleJudgement : LiftedTalent // Debuged
-{
-    static public Timer timer;
-
-    public int judgementsCount;
-    float judgementDamage;
-
-    float mult = 2f;
-    ArithmeticNode reflectMult;
-
-    public DoubleJudgement(Unit unit) : base( unit)
-    {
-        timer = new Timer(1);
-
-        reflectMult = ArithmeticNode.CreateMult();
-
-        unit.reflect.chain.Add(reflectMult);
-
-        base.InitializeViewValues("Double Judgement",
-                                  $"Hero's reflect is multiplied by {mult:P0} and \n"
-                                  +"strikes second time after short delay");
-
-    }
-
-    public override string updatedDescription { get => $"({mult:P0})"; }
-
-    protected override void Connect()
-    {
-        unit.timeredActionsList.Add(Judgement);
-        unit.target.takeDamageChain.Add(41, OnEnemyTookReflectedDamage);
-        reflectMult.Mutation = mult;
-    }
-
-    void OnEnemyTookReflectedDamage(DoDamageArgs dargs)
-    {
-        if (!dargs.isJudgement && dargs.isReflected)
-        {
-            judgementsCount++;
-            judgementDamage = dargs.damage._Val;
-        }
-    }
-
-    void Judgement()
-    {
-        if (judgementsCount > 0 && timer.Tick())
-        {
-            judgementsCount--;
-
-            DoDamageArgs judgement =
-                new DoDamageArgs(unit, judgementDamage)
-                { isReflected = true, isJudgement = true };
-
-            unit.target.TakeDamage(judgement);
-        }
-    }
-
-    protected override void Disconnect()
-    {
     }
 }
 
@@ -619,7 +513,7 @@ public class Infirmary : LiftedTalent // Debuged
         unit.timeredActionsList.Remove(Infirmary_Regenerate);
     }
 
-    [TimeredActionsUNOrdered] void Infirmary_Regenerate()
+    void Infirmary_Regenerate()
     {
         if ( unit.Alive && timer.Tick() )
         {
@@ -784,7 +678,6 @@ public class VeteransOfThirdWar : LiftedTalent // Debuged
             }
 
 
-    [TakeDamageOrder(45)]
     void EngageVeterans(DoDamageArgs dargs)
     {
         bool underThreshold = unit.healthRange.GetRatio() < veteransRatio;
@@ -803,6 +696,7 @@ public class VeteransOfThirdWar : LiftedTalent // Debuged
         RecalculateVeterans();
         loyalty.onRecalculate += RecalculateVeterans;
         unit.onDeathChain.Add((unit) =>{ armorBonus.Mutation = 1; });
+        unit.takeDamageChain.Add(45, EngageVeterans);
     }
 
     override protected void Disconnect()
@@ -1020,7 +914,6 @@ public class TitansGrowth : LiftedTalent // Debug
     }
     public override string updatedDescription { get => $"\n{mult:P0}"; }
 
-    [TimeredActionsUNOrdered]
     protected void MainRecalculateHealthMult()
     {
         if (recalculationTimer.Tick())
@@ -1038,6 +931,7 @@ public class TitansGrowth : LiftedTalent // Debug
 
     protected override void Connect()
     {
+        unit.timeredActionsList.Add(MainRecalculateHealthMult);
         RecalculateHealthMult();
         SoftReset.onReset += RecalculateHealthMult;
         SoftReset.onReset += recalculationTimer.Reset;

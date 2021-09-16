@@ -75,7 +75,6 @@ abstract public partial class Unit : MonoBehaviour
     public List<Action> timeredActionsList;
 
     public Action makeAttack;
-    public TakeDamageReflect takeDamageReflect;
 
     public static List<Unit> _Instances = new List<Unit>();
 

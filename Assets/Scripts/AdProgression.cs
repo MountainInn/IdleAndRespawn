@@ -455,3 +455,26 @@ abstract public class LiftedTalent : Talent, ILifted
     public void OnDropped() {}
 
 }
+
+[JsonObjectAttribute(MemberSerialization.OptIn)]
+public class Lifted : ILifted
+{
+    public event Action onLifted;
+
+    public Lifted() {}
+    public Lifted(int floor)
+    {
+        this.floor = floor;
+    }
+
+
+    public int floor { get; set; }
+    [JsonPropertyAttribute]
+    public bool isLifted {get; set;}
+
+
+    public void OnLifted()
+    {
+        onLifted.Invoke();
+    }
+}

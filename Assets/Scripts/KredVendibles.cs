@@ -51,11 +51,6 @@ public class KredVendibles : MonoBehaviour
         }
     }
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> c870829 (Переписал Talent чтобы он включал в себя Vendible)
     abstract public class KredVendible : OneTimeVendible
     {
         public string name, description;
@@ -67,7 +62,7 @@ public class KredVendibles : MonoBehaviour
             return this;
         }
 
-        public KredVendible(string name, string description, int price)
+        public KredVendible(string name, string description,  int price) : base(Kredits)
         {
             this.name = name; this.description = description; this.price = price;
         }

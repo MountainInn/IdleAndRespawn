@@ -70,6 +70,4 @@ public interface ILifted
 	public bool isLifted { get; set; }
 	public int floor { get; set; }
 	void OnLifted();
-	void OnDropped();
 }
-

@@ -97,7 +97,7 @@ public class SaveSystem : MonoBehaviour
     
     void LoadTalents()
     {
-        var allTalents = new List<Talent>(Phases._Inst.liftTalents.floors.Values);
+        var allTalents = new List<Talent>(Phases._Inst.allTalents);
 
         foreach(var item in talents)
         {

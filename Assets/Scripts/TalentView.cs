@@ -150,7 +150,7 @@ public class TalentView : ViewClass
 
         private void BuyTalent()
         {
-            view.thisTalent.vendible.Buy(Vault.talentPoints);
+            view.thisTalent.vendible.Buy();
         }
         void OnPointerEnter()
         {

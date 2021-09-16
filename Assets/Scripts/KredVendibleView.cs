@@ -7,10 +7,10 @@ public class KredVendibleView : MonoBehaviour
     [SerializeField] Image icon;
     [SerializeField] Text nameText, desc, price, buttonText;
 
-    KredVendible good ;
+    KredVendibles.KredVendible good ;
 
 
-    public void ConnectVendible(KredVendible good)
+    public void ConnectVendible(KredVendibles.KredVendible good)
     {
         this.good = good;
 
@@ -22,9 +22,9 @@ public class KredVendibleView : MonoBehaviour
 
         buyButton.onClick.AddListener(()=>
         {
-            if ( good.CanBuy(KredVendibles.Kredits)  )
+            if ( good.CanBuy()  )
             {
-                good.Buy(KredVendibles.Kredits);
+                good.Buy();
 
                 UpdateIsOwned(good.isOwned);
             }
@@ -58,6 +58,6 @@ public class KredVendibleView : MonoBehaviour
 
     public void UpdateBuyButtonInteractable()
     {
-        buyButton.interactable = good.CanBuy(KredVendibles.Kredits);
+        buyButton.interactable = good.CanBuy();
     }
 }

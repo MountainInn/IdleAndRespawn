@@ -22,11 +22,14 @@ public class Phases : MonoBehaviour
     }
 
     [JsonPropertyAttribute]
-    public Lift<LiftedTalent> liftTalents;
+    public Lift<Lifted> liftTalents;
+    public List<Talent> allTalents;
 
     void Start()
     {
-        liftTalents  = new Lift<LiftedTalent>(ref SoftReset.onMaxStageChanged);
+        allTalents = new List<Talent>();
+
+        liftTalents  = new Lift<Lifted>();
         AddStage(0, 005, new FullBlood(hero));
         AddStage(0, 023, new Block(hero));
         AddStage(0, 034, new Ressurection(hero));
@@ -56,17 +59,29 @@ public class Phases : MonoBehaviour
             item.gameObject.SetActive(false);
         }
 
-        foreach (var item in liftTalents.floors.Values)
-        {
-            item.SetPhase(item.floor);
-        }
+        SoftReset.onMaxStageChanged += (stage)=> CheckFloors();
+        Hero.onFragsUpdated += (frags) => CheckFloors();
 
-        liftTalents.CheckFloors(SoftReset.maxStage);
+        CheckFloors();
     }
 
-    static void AddStage(int reincarnation, int stage, LiftedTalent tal)
+    static void AddStage(int reincarnation, int stage, Talent tal)
     {
-        int id = reincarnation << 16 | stage;
-        _Inst.liftTalents.Add(id, tal);
+        tal.SetPhase(stage);
+
+        _Inst.allTalents.Add(tal);
+
+        int floor = MakeFloor(reincarnation,  stage);
+
+        _Inst.liftTalents.Add(floor, tal.lifted);
+    }
+
+    static int MakeFloor(int reincarnation, int stage)
+        => reincarnation << 16 | stage;
+
+    void CheckFloors()
+    {
+        liftTalents.CheckFloors(
+            MakeFloor(Hero._Inst.frags, SoftReset.maxStage));
     }
 }

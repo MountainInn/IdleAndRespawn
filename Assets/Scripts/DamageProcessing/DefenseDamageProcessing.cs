@@ -85,43 +85,7 @@ public class TakeDamageHealth : DamageProcessing
         dargs.damage._Val = fullDamage - nonOverkill;
     }
 }
-public class TakeDamageReflect : DamageProcessing
-{
-    public float damageReflected;
 
-    public TakeDamageReflect(Unit unit) : base(unit)
-    {
-        unit.takeDamageReflect = this;
-    }
-
-
-    [TakeDamageOrder(20)] void TakeDamage_Reflect(DoDamageArgs dargs)
-    {
-        if (!dargs.IsSimpleAttack || dargs.damage._Val < 1) return;
-
-        damageReflected = DecreaseDamage(dargs, unit);
-
-        ReflectDamage(dargs, unit, damageReflected);
-    }
-
-
-    public static float DecreaseDamage(DoDamageArgs dargs, Unit unit)
-    {
-        float reflected = unit.reflect.Result;
-
-        dargs.damage._Val = dargs.damage._Val = Mathf.Max(0, dargs.damage._Val - reflected);
-
-        return reflected;
-    }
-
-
-    public static void ReflectDamage(DoDamageArgs dargs, Unit unit, float reflected)
-    {
-        DoDamageArgs reflectDamageArgs = DoDamageArgs.CreateReflected(unit, reflected);
-        
-        dargs.attacker.TakeDamage(reflectDamageArgs);
-    }
-}
 public class TakeDamageFollowers : DamageProcessing
 {
     Followers followers;
