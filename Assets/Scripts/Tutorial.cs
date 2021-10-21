@@ -1,10 +1,12 @@
 using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using System.Runtime.Serialization;
 
 [JsonObjectAttribute(MemberSerialization.OptIn)]
 public class Tutorial : MonoBehaviour
@@ -13,25 +15,33 @@ public class Tutorial : MonoBehaviour
     static public Tutorial _Inst => inst??=GameObject.FindObjectOfType<Tutorial>();
 
 
-    [SerializeField] Image blackPanel;
+    [SerializeField, SpaceAttribute] Image blackPanel;
     [SerializeField] Text hintText;
     [SerializeField] RectTransform prefUnmask, hintPanel;
     [SerializeField] Button btnNext;
     [SerializeField] Transform unmaskParent;
-    [SerializeField] VerticalLayoutGroup tutorialsList;
-    [SerializeField] RectTransform prefTutorialView;
+    [SerializeField] Transform prefTutorialView, tutorialsList;
 
-    [SerializeField,
-    JsonPropertyAttribute]
-    List<TutorialInstance> tutorials;
+    [SerializeField] List<CanvasGroupFadeInOut> menus;
+
+    [SerializeField, JsonPropertyAttribute]
+    TutorialInstance
+        firstTutorial,
+        reincarnationTutorial;
 
     Pool<RectTransform> unmasks;
 
-    [JsonPropertyAttribute]
-    public bool
-        isFirstTutorialSeen,
-        isReincarnationTutorialSeen;
-    
+
+
+
+    [OnDeserializedAttribute]
+    public void OnDeserialized(StreamingContext context)
+    {
+        if (firstTutorial.alreadySeen) SpawnTutorialView(firstTutorial);
+        if (reincarnationTutorial.alreadySeen) SpawnTutorialView(reincarnationTutorial);
+    }
+
+
     void Awake()
     {
         unmasks = new Pool<RectTransform>(unmaskParent, prefUnmask, 3);
@@ -42,54 +52,63 @@ public class Tutorial : MonoBehaviour
 
         Boss.onBossRespawned += ()=>
         {
-            if (!isReincarnationTutorialSeen) StartShowTutorial("Reincarnation");
-            isReincarnationTutorialSeen = true;
+            if (!reincarnationTutorial.alreadySeen)
+                StartShowTutorial(reincarnationTutorial);
+        };
+
+        SaveSystem.onAfterLoad += ()=>
+        {
+            if (!firstTutorial.alreadySeen)
+            {
+                StartShowTutorial(firstTutorial);
+            }
+
         };
     }
 
-    void Start()
-    {
-        PopulateTutorialList();
 
-        
-        // if (!isFirstTutorialSeen)
-        // {
-        //     StartShowTutorial("Stats", "Boss", "Hero", "Followers", "Healing", "Scrying");
-        //     isFirstTutorialSeen = true;
-        // }
-        
-        
+    void SpawnTutorialView(TutorialInstance tutorial)
+    {
+        var instTutorialView = Instantiate(prefTutorialView, Vector3.zero, Quaternion.identity, tutorialsList.transform);
+
+        instTutorialView.GetComponentInChildren<Text>().text = tutorial.name;
+
+        instTutorialView.GetComponentInChildren<Button>().onClick.AddListener(()=>
+        {
+            StartShowTutorial(tutorial);
+        });
+
     }
 
-    public void StartShowTutorial(params string[] tutorialNames)
+    void StartShowTutorial(TutorialInstance tutorial)
     {
-        StartCoroutine(ShowTutorial(tutorialNames));
+        StartCoroutine(ShowTutorial(tutorial));
     }
 
-    IEnumerator ShowTutorial(params string[] tutorialNames)
+    IEnumerator ShowTutorial(TutorialInstance tutorial)
     {
         Pause();
 
+        foreach (var item in menus) item.OutImmediate();
+
         SetChildrenActive(true);
-        
-        foreach (var name in tutorialNames)
+
+
+        foreach (var hint in tutorial.hints)
         {
-            TutorialInstance currentTutorial = tutorials.FirstOrDefault(t =>t.name == name);
+            unmasks.FitActiveToNumber(hint.targets.Count);
 
-            if (currentTutorial == default) { Debug.Log("No tutorial named "+ name); yield return null; }
+            hint.Show(unmasks.actives, hintText, hintPanel);
 
-
-            foreach (var hint in currentTutorial.hints)
-            {
-                unmasks.FitActiveToNumber(hint.targets.Count);
-
-                hint.Show(unmasks.actives, hintText, hintPanel);
-
-                yield return WaitForNextHintButton();
-            }
+            yield return WaitForNextHintButton();
+        }
 
 
-            currentTutorial.alreadySeen = true;
+        if (!tutorial.alreadySeen)
+        {
+            SpawnTutorialView(tutorial);
+
+            tutorial.alreadySeen = true;
         }
 
         SetChildrenActive(false);
@@ -122,20 +141,6 @@ public class Tutorial : MonoBehaviour
         Time.timeScale = backupTimeScale;
     }
 
-    void PopulateTutorialList()
-    {
-        foreach ( var item in tutorials )
-        {
-            var instTutorialView = Instantiate(prefTutorialView, Vector3.zero, Quaternion.identity, tutorialsList.transform);
-
-            instTutorialView.GetComponentInChildren<Text>().text = item.name;
-
-            instTutorialView.GetComponentInChildren<Button>().onClick.AddListener(()=>
-            {
-                StartShowTutorial(item.name);
-            });
-        }
-    }
 
 
     void SetChildrenActive(bool isActive)
@@ -167,6 +172,8 @@ public class Tutorial : MonoBehaviour
         [SerializeField]
         public HintPivot hintPivot = HintPivot.center;
 
+        [SerializeField]
+        public float y;
 
         public void Show(List<RectTransform> masks, Text hintText, RectTransform hintPanel)
         {
@@ -186,25 +193,25 @@ public class Tutorial : MonoBehaviour
 
             hintText.text = hintStr;
 
-            Vector3 positionMask = Vector3.one;
+            Vector3 anchors = Vector3.one;
 
             switch (hintPivot)
             {
-                case HintPivot.center: positionMask = new Vector3(0, 0); break;
-                case HintPivot.leftTop: positionMask = new Vector3(-1, 1); break;
-                case HintPivot.leftBottom: positionMask = new Vector3(-1, -1); break;
-                case HintPivot.rightTop: positionMask = new Vector3(1, 1); break;
-                case HintPivot.rightBottom: positionMask = new Vector3(1, -1); break;
+                case HintPivot.top: anchors = new Vector3(.5f, 1); break;
+                case HintPivot.center: anchors = new Vector3(.5f, .5f); break;
+                case HintPivot.bottom: anchors = new Vector3(.5f, 0); break;
             }
 
-            float offset = Screen.width / 6;
 
-            hintPanel.localPosition = positionMask * offset;
+            hintPanel.anchorMin = anchors;
+            hintPanel.anchorMax = anchors;
+
+            hintPanel.anchoredPosition = new Vector3(0, y, 0);
         }
 
         public enum HintPivot
         {
-            center, leftTop, leftBottom, rightTop, rightBottom
+            top, center, bottom
         }
     }
 }

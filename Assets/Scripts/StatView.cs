@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Reflection;
+using System.Linq;
+using System.Runtime.Serialization;
 
 public class StatView : ViewClass
 {
@@ -26,6 +28,12 @@ public class StatView : ViewClass
         checkingVaultState,
         limitReachedState;
 
+
+    public Color
+        green,
+        red;
+
+
     void Awake()
     {
         instances.Add(this);
@@ -33,27 +41,32 @@ public class StatView : ViewClass
 
     void Start()
     {
+        upgradeName = upgradeName.ToLower();
         stat = FindUpgradeField(unit);
+        stat.view = this;
 
         checkingVaultState = new StateCheckingVault(this);
         limitReachedState = new StateLimitReached(this);
 
         SwitchState(checkingVaultState);
+
+        StatInfoScreen._Inst.InstStatInfo(GetComponent<StatDescription>(), stat);
     }
 
     StatMultChain FindUpgradeField<T>(T unit) where T : Unit
     {
         return (StatMultChain) unit.GetType()
-            .GetField(upgradeName, BindingFlags.Public | BindingFlags.Instance)
-            ?.GetValue(unit);
+            .GetFields(BindingFlags.Public | BindingFlags.Instance)
+            .First(f => f.Name.ToLower() == upgradeName)
+            .GetValue(unit);
     }
 
 
     public abstract class State : ViewState
     {
-        new public StatView view;
+        public StatView view;
 
-        public State(StatView view) : base(view)
+        public State(StatView view)
         {
             this.view = view;
         }
@@ -79,7 +92,7 @@ public class StatView : ViewClass
             UpdateInteractable();
 
             ShoppingCart.onChangedBuyLevelQuantity += UpdateInteractable;
-            Vault.expirience.onChanged += UpdateInteractable;
+            Vault.Expirience.onChanged += UpdateInteractable;
             view.stat.chain.onRecalculateChain += UpdateLevel;
             view.stat.chain.onRecalculateChain += UpdateValue;
             view.button.onClick.AddListener(LevelupStat);
@@ -88,7 +101,7 @@ public class StatView : ViewClass
         public override void Uninstall()
         {
             ShoppingCart.onChangedBuyLevelQuantity -= UpdateInteractable;
-            Vault.expirience.onChanged -= UpdateInteractable;
+            Vault.Expirience.onChanged -= UpdateInteractable;
             view.stat.chain.onRecalculateChain -= UpdateLevel;
             view.stat.chain.onRecalculateChain -= UpdateValue;
             view.button.onClick.RemoveListener(LevelupStat);
@@ -96,7 +109,7 @@ public class StatView : ViewClass
 
         void LevelupStat()
         {
-            view.stat.LevelUp(Vault.expirience, view.stat.maxAffordableLevel);
+            view.stat.LevelUp(Vault.Expirience, view.stat.maxAffordableLevel);
 
             UpdateInteractable();
 
@@ -105,14 +118,14 @@ public class StatView : ViewClass
 
         public void UpdateInteractable()
         {
-            view.stat.CalculateMaxAffordableLevel_2(view.targetLevelIncrease, out bool canAfford);
+            view.stat.CalculateMaxAffordableLevel2(view.targetLevelIncrease, out bool canAfford);
 
             view.levelAddition.text = "+" + view.stat.maxAffordableLevel.ToString();
 
             view.button.interactable = canAfford;
 
             view.cost.text = view.stat.maxAffordableCost.ToStringFormatted();
-            view.cost.color = (canAfford) ? Color.green : Color.red;
+            view.cost.color = (canAfford) ? view.green : view.red;
         }
 
         void UpdateLevel()
@@ -120,7 +133,7 @@ public class StatView : ViewClass
             view.level.text = view.stat.level.ToString();
         }
 
-        void CheckLimit()
+        public void CheckLimit()
         {
             if (view.stat.isLimitReached)
             {
@@ -143,13 +156,13 @@ public class StatView : ViewClass
             view.cost.text = "MAX LVL";
             view.cost.color = Color.blue;
 
-            view.stat.limitGrowth.onMutationUpdated += CheckLimit;
+            view.stat.growthLimit.onMutationUpdated += CheckLimit;
 
             view.stat.chain.onRecalculateChain += UpdateValue;
         }
         public override void Uninstall()
         {
-            view.stat.limitGrowth.onMutationUpdated -= CheckLimit;
+            view.stat.growthLimit.onMutationUpdated -= CheckLimit;
 
             view.stat.chain.onRecalculateChain -= UpdateValue;
         }
@@ -187,13 +200,6 @@ public abstract class ViewClass : MonoBehaviour
 
 public abstract class ViewState
 {
-    public ViewClass view;
-
-    public ViewState(ViewClass view)
-    {
-        this.view = view;
-    }
-
     abstract public void Setup();
     abstract public void Uninstall();
 }

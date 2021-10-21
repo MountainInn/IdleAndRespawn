@@ -4,76 +4,6 @@ using UnityEngine;
 using System.Runtime.Serialization;
 
 
-public class Stat
-{
-    public int level;
-
-    [SaveField]
-    public float
-        val,
-        cost,
-        baseVal,
-        valGrowth,
-        costGrowth;
-
-    public Action onLevelUp, onRecalculate;
-
-    public Stat(float initialValue, float valGrowth, float costGrowth)
-    {
-        this.baseVal = this.val = initialValue;
-        this.valGrowth = valGrowth;
-        this.costGrowth = costGrowth;
-
-        level = 1;
-        CalculateStats();
-    }
-
-
-    public void LevelUp(Currency currency, int levelIncrease = 1)
-    {
-        if ( currency.Buy(GetCostForNextLevel(levelIncrease)) )
-        {
-            level += levelIncrease;
-            CalculateStats();
-            onLevelUp?.Invoke();
-        }
-    }
-
-    public void CalculateStats()
-    {
-        val = CalcValue(level);
-        cost = CalcCost(level);
-
-        onRecalculate?.Invoke();
-    }
-
-
-    public float GetValForNextLevel(int levelsForward = 1) => CalcValue(level + levelsForward);
-
-    float CalcValue(int level) => baseVal + level * valGrowth;
-
-
-    public float GetCostForNextLevel(int levelsForward = 1) => CalcCost(level + levelsForward);
-
-    float CalcCost(int level) => level * costGrowth;
-
-    public void Multiply(float mult)
-    {
-        val *= mult;
-        valGrowth *= mult;
-    }
-    public void Divide(float mult)
-    {
-        val /= mult;
-        valGrowth /= mult;
-    }
-
-
-    static public implicit operator float(Stat upg) => upg.val;
-}
-
-
-
 [JsonObjectAttribute(MemberSerialization.OptIn)]
 public class StatMultChain
 {
@@ -88,27 +18,37 @@ public class StatMultChain
     public ArithmeticNode basevalue, growth;
 
     [JsonPropertyAttribute]
-    public ArithmeticNode limitGrowth;
+    public ArithmeticNode growthLimit;
 
-    public bool isLimitReached => limitGrowth.Result >= limitGrowth.Mutation;
+    public bool isLimitReached => growthLimit.Result >= growthLimit.Mutation;
 
     public bool
         isPercentage,
         isLimited;
 
-    [JsonPropertyAttribute]
     public float cost;
     public float
         valGrowth,
         costGrowth;
 
+    public StatView view;
 
-    public Action onLevelUp, onRecalculate;
+    public Action onLevelUp, onRecalculate, onLoaded;
+
+    [OnDeserializedAttribute]
+    protected void OnDeserialized(StreamingContext sc)
+    {
+        if (isLimitReached)
+            view.SwitchState(view.limitReachedState);
+
+        onLoaded?.Invoke();;
+    }
+
 
     public StatMultChain(float initialValue, float valGrowth, float costGrowth, float limitVal)
-        :this(initialValue, valGrowth, costGrowth)
+        : this(initialValue, valGrowth, costGrowth)
     {
-        limitGrowth.Mutation = limitVal;
+        growthLimit.Mutation = limitVal;
         isLimited = true;
     }
 
@@ -118,7 +58,7 @@ public class StatMultChain
 
         chain.Add(basevalue = ArithmeticNode.CreateRoot(initialValue));
         chain.Add(growth = ArithmeticNode.CreateAdd());
-        chain.Add(limitGrowth = ArithmeticNode.CreateLimit(float.MaxValue));
+        chain.Add(growthLimit = ArithmeticNode.CreateLimit(float.MaxValue));
 
 
         this.valGrowth = valGrowth;
@@ -132,7 +72,7 @@ public class StatMultChain
 
     public void LevelUp(Currency currency, int levelIncrease = 1)
     {
-        if ( currency.Buy(maxAffordableCost) )
+        if (currency.Buy(maxAffordableCost))
         {
             level += levelIncrease;
             RecalculateStats();
@@ -154,70 +94,58 @@ public class StatMultChain
 
     public float GetCostForNextLevel(int levelsForward = 1) => CalcCost(level + levelsForward);
 
-    public float CalcCost(int level) => costGrowth + level * Mathf.Log(level, 10) * 0.1f * costGrowth;
+    public float CalcCost(int level) => costGrowth + level * Mathf.Log(level + 2, 10) * 0.125f * costGrowth;
 
     float CalcGrowthValue(int level) => level * valGrowth;
 
     public int maxAffordableLevel;
     public float maxAffordableCost;
-    public float CalculateMaxAffordableLevel_2(int targetLevel, out bool canAfford)
+
+    public int CalculateMaxAffordableLevel2(int targetLevel, out bool canAfford)
     {
-        Tuple<int, float>
-            prev = Tuple.Create(1, GetCostForNextLevel(1)),
-            cur = Tuple.Create(1, GetCostForNextLevel(1));
+        int untilLimit = GetLevelLimitFromValueLimit();
+
+        int level = 1;
+        float acum = GetCostForNextLevel(level);
+        canAfford = Vault.Expirience.CanAfford(acum);
+
+        int nextLevel;
+        float nextAcum = acum;
+        bool nextCanAfford;
 
         do
         {
-            canAfford = Vault.expirience.CanAfford(cur.Item2);
+            nextLevel = level + 1;
 
-            if (!canAfford) break;
-            else
+            if (nextLevel > targetLevel ||
+                nextLevel > untilLimit
+            )
+                break;
+
+            nextAcum += GetCostForNextLevel(nextLevel);
+            nextCanAfford = Vault.Expirience.CanAfford(nextAcum);
+
+            if (nextCanAfford)
             {
-                prev = cur;
-
-                int nextLevel = cur.Item1 + 1;
-                cur = Tuple.Create(nextLevel, cur.Item2 + GetCostForNextLevel(nextLevel));
+                level = nextLevel;
+                acum = nextAcum;
+                canAfford = nextCanAfford;
             }
+            else
+                break;
         }
-        while (cur.Item1 < targetLevel);
+        while (level <= targetLevel);
 
-        maxAffordableCost = prev.Item2;
-
-        canAfford = Vault.expirience.CanAfford(maxAffordableCost);
-
-        return maxAffordableLevel = Mathf.Clamp(prev.Item1, 0, targetLevel);
+        maxAffordableCost = acum;
+        return maxAffordableLevel = level;
     }
-    public int CalculateMaxAffordableLevel(int targetLevel, out bool canAfford)
+
+
+    int GetLevelLimitFromValueLimit()
     {
-        int level = 0;
-        maxAffordableCost = 0;
-
-        do
-        {
-            level++;
-
-            float newCost = GetCostForNextLevel(level);
-
-            maxAffordableCost += newCost;
-
-            canAfford = level > 0 && maxAffordableCost > 0 && Vault.expirience.CanAfford(maxAffordableCost);
-
-            if (!canAfford) 
-            {
-                maxAffordableCost -= newCost;
-                level--;
-
-                canAfford = level > 0 && maxAffordableCost > 0 && Vault.expirience.CanAfford(maxAffordableCost);
-                return maxAffordableLevel = Mathf.Clamp(level, 0, targetLevel);
-            }
-            else
-            {
-                level++;
-            }
-        }
-        while (level < targetLevel);
-
-        return maxAffordableLevel = Mathf.Clamp(level, 0, targetLevel);
+        if (growthLimit.Mutation == float.MaxValue) return int.MaxValue;
+        else
+            return (int)( ( growthLimit.Mutation - basevalue.Result) / valGrowth ) - level +1;
     }
 
     static public implicit operator float(StatMultChain stat) => stat.Result;

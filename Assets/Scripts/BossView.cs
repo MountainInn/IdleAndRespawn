@@ -25,7 +25,7 @@ public class BossView : UnitView<Boss>
         float fill = Mathf.Clamp(1f - ratio, 0.001f, 0.999f);
         hpMaterial.SetFloat(oneMinusHealthRatio, fill);
 
-        healthText.text = FloatExt.BeautifulFormat(unit.healthRange._Val);
+        healthText.text = unit.healthRange._Val.ToStringFormatted();
     }
 
     void UpdateStageNumber()
@@ -36,7 +36,7 @@ public class BossView : UnitView<Boss>
 
     void UpdateReincarnationNumber(int frags)
     {
-        if (!reincarnationText.gameObject.activeSelf)
+        if (frags > 0 && !reincarnationText.gameObject.activeSelf)
                 reincarnationText.gameObject.SetActive(true);
 
         reincarnationText.text = "Reincarnation: " + frags;

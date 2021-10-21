@@ -1,10 +1,15 @@
 using UnityEngine;
+using UnityEngine.Advertisements;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System;
 
 public class AdProgressionView : MonoBehaviour
 {
+    static AdProgressionView inst;
+    static public AdProgressionView _Inst => inst??=GameObject.FindObjectOfType<AdProgressionView>();
+
+
     [SerializeField] Image progBarUnder, progBarOver;
     [SerializeField] Image orbImage;
     [SerializeField] MilestoneView prefMilestone;
@@ -13,48 +18,75 @@ public class AdProgressionView : MonoBehaviour
         currentLevelText,
         percentMultText,
         percentDescriptionText,
-        adCooldownText;
+        watchAdButtonText,
+        adChargesCounter;
+    public Text adCooldownText;
+
+    [SerializeField]
+    Sprite
+        blueOrb,
+        grayOrb;
 
     int maxLevel;
 
+    bool adIsOk;
+
     Dictionary<AdTalent, MilestoneView> milestones = new Dictionary<AdTalent, MilestoneView>();
-    
 
-    void SubscribeToAdvertisement()
+    void Awake()
     {
-        Advertisement._Inst.cooldown.onRatioChanged += (ratio)=>{ UpdateAdCooldownText(); UpdateOrbFill(ratio); };
-
+        SwitchToGray();
     }
 
     void Start()
     {
-        UpdateAdCooldownText();
-        UpdateOrbFill(Advertisement._Inst.cooldown.GetRatio());
+        AdCharges.onChargesChanged += UpdateChargesText;
 
-        SubscribeToAdvertisement();
+        UpdateChargesText();
     }
 
-    void UpdateAdCooldownText()
-    {
-        string str;
 
-        if (Advertisement._Inst.cooldown.isFinished)
+    private void UpdateChargesText()
+    {
+        adChargesCounter.text = AdCharges._Inst.AdChargesToString();
+    }
+
+
+    public void SwitchToGray()
+    {
+        AdCharges._Inst.cooldown.onRatioChanged -= UpdateAdCooldownText;
+
+        adCooldownText.text = "No Internet";
+
+        orbImage.sprite = grayOrb;
+    }
+
+    public void SwitchToBlue()
+    {
+        AdCharges._Inst.cooldown.onRatioChanged += UpdateAdCooldownText;
+
+        UpdateAdCooldownText();
+
+        orbImage.sprite = blueOrb;
+    }
+
+
+    void UpdateAdCooldownText(float ratio = 0)
+    {
+        if (AdCharges.IsGreaterThanZero)
         {
-            str = "Ready!";
+            adCooldownText.text = "Ad is Ready!";
         }
         else
         {
-            var seconds = Advertisement._Inst.cooldown.endTime - Advertisement._Inst.cooldown.T;
-            TimeSpan timespan = TimeSpan.FromSeconds(seconds);
-            str = timespan.ToString();
+            adCooldownText.text = AdCharges.StringTimeToCharge();
         }
-        
-        adCooldownText.text = str;
     }
 
     public void UpdateOrbFill(float fillAmount)
     {
-        orbImage.fillAmount = fillAmount;
+        if (!AdCharges.IsFull)
+            orbImage.fillAmount = fillAmount;
     }
 
     public void InitMilestones()
@@ -67,27 +99,28 @@ public class AdProgressionView : MonoBehaviour
         {
             float levelFraction = (float)level / maxLevel;
 
-            float yPos = progBarOver.rectTransform.rect.height * levelFraction;
+            float overHeight = progBarOver.rectTransform.rect.height;
+            float yPos = progBarUnder.rectTransform.anchoredPosition.y + overHeight * levelFraction;
 
-            var position = new Vector3(20, yPos);
+            var position = new Vector3(0, yPos);
 
             MilestoneView mView = Instantiate(prefMilestone);
-            mView.transform.SetParent(progBarOver.transform);
+            mView.transform.SetParent(transform);
             mView.transform.localScale = Vector3.one;
-            mView.transform.localPosition = position;
+            RectTransform mViewRect = mView.GetComponent<RectTransform>();
+            mViewRect.anchoredPosition = position;
+            mViewRect.sizeDelta = mViewRect.sizeDelta.SetX(-40);
 
             mView.SetView(level, floors[level]);
 
             milestones.Add(floors[level], mView);
         }
     }
-
     public void UpdateMilestones(AdTalent liftedTalent)
     {
-        milestones[liftedTalent].SetReachedColor();
+        milestones[liftedTalent].SetReached();
         milestones[liftedTalent].UpdateView(liftedTalent);
     }
-
     public void UpdateLevel(int currentLevel)
     {
         progBarOver.fillAmount = (float)currentLevel / maxLevel;
@@ -98,6 +131,6 @@ public class AdProgressionView : MonoBehaviour
 
         percentMultText.text = percentStr;
 
-        percentDescriptionText.text = $"+{percentStr} attack & defense to hero & followers";
+        percentDescriptionText.text = $"+{percentStr} attack & defense to hero & followers\n+{percentStr} offline income";
     }
 }

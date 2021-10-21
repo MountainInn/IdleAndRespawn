@@ -1,29 +1,58 @@
 using UnityEngine;
+using Newtonsoft.Json;
 
+[JsonObjectAttribute(MemberSerialization.OptIn)]
 public class BattleExpiriense : MonoBehaviour
 {
+    static BattleExpiriense inst;
+    static public BattleExpiriense _Inst => inst??=GameObject.FindObjectOfType<BattleExpiriense>();
+
     static float
         flatExp = 100,
-        maxStageToExpMult = 10f,
+        maxStageToExpMult = 6.5f,
         expPerHit;
+
+    [JsonPropertyAttribute]
+    public float
+        maxExpPerHit;
+
+    Timer
+        eachSecond = new Timer(1);
 
     void Awake()
     {
         UpdateExpPerHit();
 
-        SoftReset.onMaxStageChanged += (newMaxStage)=> UpdateExpPerHit();
+
+        SaveSystem.onAfterLoad += OnAfterLoad;
+        void OnAfterLoad()
+        {
+            SoftReset.onMaxStageChanged += (newMaxStage)=> UpdateExpPerHit();
+            SaveSystem.onAfterLoad -= OnAfterLoad;
+        }
     }
+
     void UpdateExpPerHit()
     {
         float
-            stageComponent = SoftReset.maxStage * maxStageToExpMult,
-            fragsComponent = 1 + Hero._Inst.frags * .1f;
+            stageComponent = SoftReset.maxStage * maxStageToExpMult;
 
-        expPerHit = Mathf.Floor(flatExp + stageComponent * fragsComponent);
+        expPerHit = Mathf.Floor(flatExp + stageComponent);
+
+        maxExpPerHit = Mathf.Max(expPerHit, maxExpPerHit);
     }
 
-    static public void MakeExpiriense(DoDamageArgs damageArgs)
+
+    void Update()
     {
-        Vault.expirience.Earn(expPerHit);
+        if (eachSecond.Tick())
+        {
+            MakeExpiriense();
+        }
+    }
+
+    private void MakeExpiriense()
+    {
+        Vault.Expirience.Earn(maxExpPerHit);
     }
 }

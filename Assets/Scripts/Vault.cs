@@ -10,11 +10,16 @@ public class Vault : MonoBehaviour
     static public Vault _Inst => inst??=GameObject.FindObjectOfType<Vault>();
 
     [JsonPropertyAttribute]
-    static public Currency
+    public Currency
         expirience,
         talentPoints,
         soulshard,
         soulEnergy;
+    static public Currency Expirience => _Inst.expirience;
+    static public Currency TalentPoints => _Inst.talentPoints;
+    static public Currency Soulshard => _Inst.expirience;
+    static public Currency SoulEnergy => _Inst.expirience;
+
     [SerializeField]
     Text
         expirienceView,
@@ -24,9 +29,7 @@ public class Vault : MonoBehaviour
     [SerializeField]
     FloatingTextMaker
         expEarn,
-        talEarn,
-        soulshardEarn,
-        soulEnergyEarn;
+        talentEarn;
     [SerializeField, SpaceAttribute]
     GameObject
         soulshardIncome,
@@ -35,11 +38,11 @@ public class Vault : MonoBehaviour
     void Awake()
     {
         expirience = new Currency(0);
-        talentPoints = new Currency(1000);
+        talentPoints = new Currency(0);
         soulshard = new Currency(0);
 
-        InitView(expirienceView, expEarn, expirience);
-        InitView(talentPointsView, talEarn, talentPoints);
+        InitView(expirienceView, expEarn, Expirience);
+        InitView(talentPointsView, talentEarn, TalentPoints);
 
         bossSoulsViewParent.SetActive(false);
     }
@@ -75,8 +78,8 @@ public class Vault : MonoBehaviour
 
     void InitializeSouls()
     {
-        InitView(soulshardView, soulshardEarn, soulshard);
-        InitView(soulenergyView, soulEnergyEarn, soulEnergy);
+        InitView(soulshardView, null, Soulshard);
+        InitView(soulenergyView, null, SoulEnergy);
 
         soulshardIncome.SetActive(true);
     }

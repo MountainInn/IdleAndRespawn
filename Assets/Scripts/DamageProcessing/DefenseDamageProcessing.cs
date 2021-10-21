@@ -98,7 +98,9 @@ public class TakeDamageFollowers : DamageProcessing
     
     void TakeDamage_Followers(DoDamageArgs dargs)
     {
-        if (followers.Alive && !dargs.isHotHanded)
+        if (dargs.isHotHanded || dargs.isInterrupted) return;
+
+        if (followers.Alive)
         {
             followers.TakeDamage(dargs);
         }

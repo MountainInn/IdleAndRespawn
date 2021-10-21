@@ -19,7 +19,7 @@ public class GameSaver : MonoBehaviour
         }
     }
 
-    void OnDisable()
+    void OnApplicationQuit()
     {
         saveSystem.SaveGame();
     }

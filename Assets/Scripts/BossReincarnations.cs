@@ -41,7 +41,7 @@ public partial class Boss
 
     void UpdateReincarnationMult(int frags)
     {
-        multOne = Mathf.Max(1, frags * 10);
+        multOne = 1 + (frags * Mathf.Pow(Mathf.Log10(1 +frags), 2))/2;
         reincarnationDamageMult.Mutation = multOne;
         reincarnationHealthMult.Mutation = multOne;
 

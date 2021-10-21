@@ -10,6 +10,20 @@ using System.Runtime.Serialization;
 [JsonObjectAttribute(MemberSerialization.OptIn)]
 abstract public partial class Unit : MonoBehaviour
 {
+    [OnDeserializedAttribute]
+    public void OnDeserialized(StreamingContext context)
+    {
+        // if (frags > 0) Vault.ActivateBossSoulsView();
+        if (!ableToFight)
+        {
+            healthRange._Val = healthRange._Max;
+            attackTimer.Reset();
+            healingTimer?.Reset();
+
+            ableToFight = true;
+        }
+    }
+
     public Unit
         target,
         followers;
@@ -44,12 +58,16 @@ abstract public partial class Unit : MonoBehaviour
 
         ;
 
+    [JsonPropertyAttribute]
     public bool
-        hasBlock,
         ableToFight = true,
+        isRespawning,
+        hasBlock,
         isCasting;
     public bool
         Alive => healthRange._Val > 0;
+    public Action
+        onRespawned;
 
     public void InitStats()
     {
@@ -62,11 +80,17 @@ abstract public partial class Unit : MonoBehaviour
     {
         health = new StatMultChain(initialVal, growthVal, growthCost);
 
-        health.chain.onRecalculateChain += () =>{ healthRange.UpgradeMax(health.Result); };
+        health.chain.onRecalculateChain += () =>
+        {
+            if (isRespawning || Alive)
+                healthRange.UpgradeMaxWithValRestoration(health.Result);
+            else
+                healthRange.UpgradeMax(health.Result);
+        };
 
         healthRange = new Range(health.Result);
 
-        healthRange.onLessThanZero += ()=>{ onDeathChain.Invoke(this); };
+        healthRange.onLessThanZero += () => { onDeathChain.Invoke(this); };
     }
 
 
@@ -74,7 +98,7 @@ abstract public partial class Unit : MonoBehaviour
 
     public List<Action> timeredActionsList;
 
-    public Action makeAttack;
+    public Action<float> makeAttack;
 
     public static List<Unit> _Instances = new List<Unit>();
 
@@ -83,7 +107,7 @@ abstract public partial class Unit : MonoBehaviour
         _Instances.Add(this);
 
         takeDamageChain = new ActionChain<DoDamageArgs>();
-        
+
         attackChain = new ActionChain<DoDamageArgs>();
 
         healingChain = new ActionChain<DoHealArgs>();
@@ -97,7 +121,7 @@ abstract public partial class Unit : MonoBehaviour
 
         statInitChain = new ActionChain<Unit>();
 
-        statInitChain.Add(0, (unit)=>{ FirstInitStats(); });
+        statInitChain.Add(0, (unit) => { FirstInitStats(); });
 
         onDeathChain = new ActionChain<Unit>();
 
@@ -137,7 +161,7 @@ abstract public partial class Unit : MonoBehaviour
             Alive &&
             target.ableToFight &&
             target.Alive
-            )
+        )
             timeredActionsList.ForEach(action => action.Invoke());
     }
 
@@ -148,14 +172,20 @@ abstract public partial class Unit : MonoBehaviour
         return new DoDamageArgs(this, damage);
     }
 
-    
+
     public IEnumerator OnDeath()
     {
         ableToFight = false;
 
+        isRespawning = true;
+
         yield return RecoverOnRespawn();
 
+        isRespawning = false;
+
         ableToFight = true;
+
+        onRespawned?.Invoke();
     }
 
     public void CutoffAttackTimer()
@@ -166,31 +196,41 @@ abstract public partial class Unit : MonoBehaviour
     protected IEnumerator RecoverOnRespawn()
     {
         float
-            softResetDelta = Time.deltaTime / SoftReset.respawnDuration,
-
-            missingHP = healthRange._Max - healthRange._Val,
-            healthDelta = softResetDelta * missingHP,
-
+            softResetDelta = Time.deltaTime * Time.timeScale / SoftReset.respawnDuration,
             attackTimerDelta = softResetDelta * attackTimer.endTime,
-            healingTimerDelta = softResetDelta * healingTimer.endTime;
+            healingTimerDelta = softResetDelta * healingTimer.endTime,
+            missingHP = healthRange._Max - healthRange._Val,
+            healthDelta = softResetDelta * missingHP;
+
         bool
             isHealthMissing,
             isHealTimerFull,
             isAttackTimerFull;
 
+        float
+            accumBorder = healthRange._Max / 1e6f,
+            accumHP = 0;
         do
         {
-            if (isHealthMissing = ( healthRange._Val < healthRange._Max ))
-                AffectHP(healthDelta);
+            if (isHealthMissing = (healthRange._Val < healthRange._Max))
+            {
+                if (accumHP < accumBorder)
+                    accumHP += healthDelta;
+                else
+                {
+                    AffectHP(accumHP);
+                    accumHP = 0;
+                }
+            }
 
             if (isAttackTimerFull = (attackTimer.T > 0))
                 attackTimer.T -= attackTimerDelta;
 
             if (healingTimer != null && (isHealTimerFull = (healingTimer.T > 0)))
                 healingTimer.T -= healingTimerDelta;
-                
+
             yield return new WaitForSeconds(Time.deltaTime);
-        }
+}
         while (isHealthMissing || isAttackTimerFull);
     }
 
@@ -198,14 +238,14 @@ abstract public partial class Unit : MonoBehaviour
     {
         var stats = this.GetType()
             .GetFields(BindingFlags.Instance)
-            .Where(f=>f.FieldType == typeof(StatMultChain))
-            .Select(f=>(StatMultChain)f.GetValue(this));
+            .Where(f => f.FieldType == typeof(StatMultChain))
+            .Select(f => (StatMultChain)f.GetValue(this));
 
         foreach (var item in stats)
         {
             yield return item;
         }
     }
-    
+
 }
 

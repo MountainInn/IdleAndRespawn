@@ -5,7 +5,7 @@ public class DoDamageArgs
     public Unit target => attacker.target;
     public Range damage;
 
-    public bool IsSimpleAttack => !(isJudgement || isDiversion || isBlindingLight || isHotHanded || isReflected || isDoom || isBloodMadness);
+    public bool IsSimpleAttack => !(isJudgement || isDiversion || isBlindingLight || isHotHanded || isReflected || isDoom || isBloodMadness || isInterrupted);
 
     public bool
         isCritical,
@@ -13,7 +13,8 @@ public class DoDamageArgs
         isDiversion,
         isBlindingLight,
 
-        isReflected,
+    isInterrupted,
+    isReflected,
         isJudgement,
 
         isBloodMadness,
@@ -24,7 +25,6 @@ public class DoDamageArgs
         eatTheWeak,
         sharpSpikes
         ;
-
     public DoDamageArgs(Unit attacker, float damage)
     {
         this.attacker = attacker;

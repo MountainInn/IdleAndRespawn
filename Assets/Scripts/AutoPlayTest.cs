@@ -6,44 +6,50 @@ using System.Collections.Generic;
 
 public class AutoPlayTest : MonoBehaviour
 {
-    public float timeScale = 20f;
-
     FileWriter logger;
 
     Timer autobuyTimer = new Timer(10);
+    Timer statbuyTimer = new Timer(60 * 5);
 
     List<Button.ButtonClickedEvent> buttonClickEvents = new List<Button.ButtonClickedEvent>();
-    List<TalentView> talentBuys ;
+    List<TalentStripView> talentBuys ;
     List<StatView> statBuys = new List<StatView>();
 
     void Start()
     {
-        Accelerate();
+        // Tutorial._Inst.isReincarnationTutorialSeen = true;
+        // Tutorial._Inst.isFirstTutorialSeen = true;
 
-        ShoppingCart._BuyLevelQuantity = 5;
+        ShoppingCart._BuyLevelQuantity = 1;
 
-        autobuyTimer.T = autobuyTimer.endTime*.9f;
+        autobuyTimer.T = autobuyTimer.endTime * .9f;
 
         buttonClickEvents = new List<Button.ButtonClickedEvent>();
         buttonClickEvents.AddRange(GameObject.FindObjectsOfType<UpgradeButton>().Select(up=>up.self.onClick));
 
-        talentBuys = TalentView.instances.Where(tv=>tv.thisTalent != null).ToList();
+        talentBuys = TalentStripView.instances.Where(tv=>tv.thisTalent != null).ToList();
         talentBuys.Sort(
-        delegate (TalentView a, TalentView b)
+        delegate (TalentStripView a, TalentStripView b)
         {
                     if (a.thisTalent.vendible.price < b.thisTalent.vendible.price) return -1;
                     else if (a.thisTalent.vendible.price == b.thisTalent.vendible.price) return 0;
                     else return 1;
             });
+        Talent.onStripViewInitialized += (strip)=>{
+            talentBuys.Add(strip);
+
+            talentBuys.Sort(
+            delegate (TalentStripView a, TalentStripView b)
+            {
+                    if (a.thisTalent.vendible.price < b.thisTalent.vendible.price) return -1;
+                    else if (a.thisTalent.vendible.price == b.thisTalent.vendible.price) return 0;
+                    else return 1;
+            });
+        };
 
         statBuys = StatView.instances;
 
         InitializeLogger();
-    }
-
-    private void Accelerate()
-    {
-        Time.timeScale = timeScale;
     }
 
 
@@ -57,16 +63,58 @@ public class AutoPlayTest : MonoBehaviour
     {
         if (autobuyTimer.Tick())
         {
+            if (talentBuys != null)
             foreach (var item in talentBuys)
             {
-                if (item.currentState.GetType() == typeof(TalentView.DiscoveredState))
+                if (item.currentState.GetType() == typeof(TalentStripView.DiscoveredState))
                 {
-                    item.button.onClick.Invoke();;
+                    item.buyButton.onClick.Invoke();;
                 }
             }
 
-            foreach (var item in statBuys)
-            item.button.onClick.Invoke();
+
+            if (AdCharges.IsGreaterThanZero)
+            {
+                RewardedAdsButton.MyOnUnityAdsShowComplete();
+            }
+        }
+
+        if (statbuyTimer.Tick())
+        {
+            int safeCounter = 0;
+
+            statBuys
+            .Sort(delegate (StatView a, StatView b)
+            {
+                            if (a.stat.cost < b.stat.cost) return -1;
+                    else if (a.stat.cost == b.stat.cost) return 0;
+                        else return 1;
+                    });
+
+            List<Button> buttons;
+            while (
+                (buttons = (
+                    statBuys
+                    .Select(view => {
+                        if (view.stat.CalculateMaxAffordableLevel2(ShoppingCart._BuyLevelQuantity, out bool canAfford) > 0 && canAfford)
+                            return view.button;
+
+                        return null;
+                    })
+                    .Where(button => button != null)
+                    .ToList()
+                ))
+                .Count() > 0
+            )
+            {
+                foreach (var item in buttons)
+                    item.onClick.Invoke();
+
+                if (++safeCounter > 3000)
+                {
+                    break;
+                }
+            }
         }
     }
 
@@ -84,7 +132,12 @@ public class LogPhases : FileWriter
     {
         OpenNewLog("Phase 0");
 
-        Phases._Inst.liftTalents.onLifted += (liftedTalent) => { OnPhaseActivated(liftedTalent.floor); };
+        Phases._Inst.lifts.onLifted += (liftedTalent) => { OnPhaseActivated(liftedTalent.floor); };
+        Hero.onFragsUpdated += (frags) =>
+        {
+            OnPhaseActivated(SoftReset.maxStage);
+            Application.Quit();
+        };
     }
 
     override public void Dispose()
@@ -101,7 +154,7 @@ public class LogPhases : FileWriter
     void OnPhaseActivated(int stage)
     {
         WriteLastLog();
-        
+       
         OpenNewLog($"Phase {stage}");
     }
 
@@ -111,7 +164,11 @@ public class LogPhases : FileWriter
 
         lastLog.CloseLog();
 
-        Log(lastLog.ToString());
+        string logString = lastLog.ToString();
+
+        Log(logString);
+
+        Debug.Log(logString);
 
         logs.Remove(lastLog);
     }

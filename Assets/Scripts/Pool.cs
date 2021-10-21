@@ -44,7 +44,7 @@ public class Pool<T> where T : Component
 
         if (diff > 0)           // Too much actives
         {
-            for(int i = activeNumber-1; i > count; i--)
+            for(int i = activeNumber-1; i >= count; i--)
             {
                 Release(actives[i]);
             }
@@ -69,15 +69,24 @@ public class Pool<T> where T : Component
         return n;
     }
 
+    public T AcquireAndParent(Transform parent)
+    {
+        T newObject = Acquire();
+
+        newObject.transform.SetParent(parent, false);
+        newObject.transform.localScale = parent.localScale;
+
+        return newObject;
+    }
 
     public T AcquireAndPlace(Transform parent, Vector3 position, Quaternion rotation)
     {
         T newObject = Acquire();
 
         newObject.transform.SetParent(parent, false);
+        newObject.transform.localScale = parent.localScale;
         newObject.transform.position = position;
         newObject.transform.rotation = rotation;
-        newObject.transform.localScale = Vector3.one;
 
         return newObject;
     }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class FloatingText : MonoBehaviour, IPoolable
+public class FloatingText : MonoBehaviour
 {
     [SerializeField]
     float
@@ -17,8 +17,16 @@ public class FloatingText : MonoBehaviour, IPoolable
 
     public Text text;
 
+    GoTweenConfig goConfig;
+    GoTween goTween;
+
     void Awake()
     {
+        goConfig = new GoTweenConfig()
+            .setIterations(1)
+            .setDelay(lifetime/2)
+            .setEaseType(GoEaseType.Linear);
+
         text = GetComponent<Text>();
     }
 
@@ -43,14 +51,17 @@ public class FloatingText : MonoBehaviour, IPoolable
         }
     }
 
-    public void AfterAcquired()
+    public void OnEnable()
     {
-        text.CrossFadeColor(text.color.SetA(0), alphaLifetime, true, true);
+        Go.to(text,
+              lifetime/2,
+              goConfig.colorProp("color", text.color.SetA(0)));
     }
 
     void OnDisable()
     {
         t = 0;
         text.color = text.color.SetA(1);
+        goConfig.clearProperties();
     }
 }

@@ -60,15 +60,15 @@ public class Attack : DamageProcessing
         if (unit.target != null &&
             timer.Tick()
         )
-            MakeAttack();
+            MakeAttack(unit.damage.Result);
     }
 
     
-    public void MakeAttack()
+    public void MakeAttack(float damage)
     {
         if (unit.attackChain == null) return;
 
-        var attackArgs = unit.attackChain.Invoke(new DoDamageArgs(unit, unit.damage.Result));
+        var attackArgs = unit.attackChain.Invoke(new DoDamageArgs(unit, damage));
 
         unit.target.TakeDamage(attackArgs);
 

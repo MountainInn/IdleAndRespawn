@@ -47,7 +47,7 @@ public class UpgradeButton : Register<UpgradeButton>
 
         self.onClick.AddListener(() =>
         {
-            stat.LevelUp(Vault.expirience, stat.maxAffordableLevel);
+            stat.LevelUp(Vault.Expirience, stat.maxAffordableLevel);
 
             UpdateInteractable();
         });
@@ -63,8 +63,8 @@ public class UpgradeButton : Register<UpgradeButton>
             CheckLimits();
         };
 
-        if (stat.limitGrowth != null)
-            stat.limitGrowth.onMutationUpdated += () =>
+        if (stat.growthLimit != null)
+            stat.growthLimit.onMutationUpdated += () =>
             {
                 CheckLimits();
             };
@@ -74,7 +74,7 @@ public class UpgradeButton : Register<UpgradeButton>
         DisplayVal();
         UpdateInteractable();
 
-        Vault.expirience.onChanged_Amount += (change) => {
+        Vault.Expirience.onChanged_Amount += (change) => {
 
             UpdateInteractable();
         };
@@ -109,7 +109,7 @@ public class UpgradeButton : Register<UpgradeButton>
 
     public void UpdateInteractable()
     {
-        stat.CalculateMaxAffordableLevel(targetLevelIncrease, out bool canAfford);
+        stat.CalculateMaxAffordableLevel2(targetLevelIncrease, out bool canAfford);
 
         self.interactable = canAfford;
 

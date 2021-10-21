@@ -162,16 +162,6 @@ public class OneTimeVendible : Vendible
     {
     }
 
-    [OnDeserializedAttribute]
-    public void OnDeserialized(StreamingContext streamingContext)
-    {
-        if (isOwned)
-        {
-            OnBought();
-            onBought?.Invoke();
-        }
-    }
-
     override public void Buy()
     {
         if (CanBuy())

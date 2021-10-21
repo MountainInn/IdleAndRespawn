@@ -3,32 +3,48 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using Leopotam.Ecs;
 using Newtonsoft.Json;
 
-
-#region Progress Bar
-
-public struct Progress { public float current, max; }
-
-public struct ProgBarRef
+[SerializableAttribute, JsonObjectAttribute(MemberSerialization.OptIn)]
+public class CallbackTimer
 {
-    public ProgBarRef(Image progImage)
+    [SerializeField] public float endTime;
+
+    float _t;
+    [HideInInspector, JsonPropertyAttribute]
+    public float T
     {
-        this.progImage = progImage;
-        this.progImage.fillAmount = 1f;
+        get => _t ;
+        protected set
+        {
+            _t = value ;
+            onRatioChanged?.Invoke(GetRatio());
+        }
     }
-    public Image progImage;
+
+    public Action<float> onRatioChanged;
+    public Action onFinished;
+
+    public CallbackTimer(float max)
+    {
+        this.endTime = max;
+        T = 0f;
+    }
+
+    public void Tick(float seconds)
+    {
+        T += seconds;
+
+        while (T >= endTime )
+        {
+            T -= endTime;
+
+            onFinished?.Invoke();
+        }
+    }
+
+    public float GetRatio() => T / endTime;
 }
-
-public struct EvFinished : IEcsIgnoreInFilter {}
-
-public struct EvTookDamage : IEcsIgnoreInFilter {}
-
-public struct EvUpgVamp : IEcsIgnoreInFilter {}
-
-
-#endregion
 
 [SerializableAttribute, JsonObjectAttribute(MemberSerialization.OptIn)]
 public class Timer
@@ -128,64 +144,3 @@ public class StatBasedTimer : Timer
 
     public void UpdateEndtime() => SetEndTime(endtimeStat.Result);
 }
-
-
-public struct Health
-{
-    public float current, max;
-
-    public Health(float maxHealth)
-    {
-        current = max = maxHealth;
-    }
-
-    public void Add(float val)
-    {
-        current = Mathf.Clamp(current + val, 0, max);
-    }
-}
-
-
-public struct Body
-{
-    public Health health;
-}
-
-public struct Arms
-{
-    public float
-        damage,
-        vampirism,
-
-        critChance,
-        critMult;
-}
-
-
-
-#region Flags
-
-public struct FlagHero : IEcsIgnoreInFilter {}
-public struct FlagBoss : IEcsIgnoreInFilter {}
-public struct FlagFollower : IEcsIgnoreInFilter {}
-
-#endregion
-
-public struct DoubleEndedProgressRef { public DoubleEndedProgress val; }
-
-public struct Cost
-{
-    public int valCost;
-}
-
-public struct Level
-{
-    public int valLevel;
-}
-
-public struct Talents
-{
-    public int valTalents;
-}
-
-public struct ButtonRef { public Button val; }

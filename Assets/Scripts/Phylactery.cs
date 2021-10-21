@@ -19,7 +19,7 @@ public class Phylactery : MonoBehaviour
         {
             capacity._Val -= SoulStats.soulDamage;
 
-            Vault.soulshard.Earn(SoulStats.soulDamage);
+            Vault.Soulshard.Earn(SoulStats.soulDamage);
         };
     }
 }

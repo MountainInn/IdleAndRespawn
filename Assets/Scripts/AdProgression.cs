@@ -56,9 +56,13 @@ public class AdProgression : MonoBehaviour
         followersArmorMult, followersDamageMult;
     public Lift<AdTalent>
         liftTalents = new Lift<AdTalent>();
+    static public AdTalent
+        inspiration,
+        vengeance,
+        sharingLight,
+        lastWishes;
 
     [SerializeField] AdProgressionView view;
-    Animation flareAnimation;
 
 
     [System.Runtime.Serialization.OnDeserializedAttribute]
@@ -74,33 +78,14 @@ public class AdProgression : MonoBehaviour
         InitMult();
 
         InitTalents();
-
-        InitAnimation();
-        
-        SubscribeToAdvertisement();
-
-        Level = 0;
-    }
-
-    private void InitAnimation()
-    {
-        flareAnimation = GetComponent<Animation>();
-        flareAnimation.wrapMode = WrapMode.Loop;
-    }
-
-    private void SubscribeToAdvertisement()
-    {
-        Advertisement.onReady += ()=>{ flareAnimation.Play(); };
-        Advertisement.onWatched += flareAnimation.Stop ;
-        Advertisement.onWatched += LevelUp;
     }
 
     private void InitTalents()
     {
-        liftTalents.Add(05, new Inspiration(inspirationIcon));
-        liftTalents.Add(10, new Vengence(vengenceIcon, this));
-        liftTalents.Add(20, new SharingLight(sharingLightIcon));
-        liftTalents.Add(30, new LastWishes(lastWishesIcon));
+        liftTalents.Add(15, inspiration = new Inspiration(inspirationIcon));
+        liftTalents.Add(25, vengeance = new Vengeance(vengenceIcon, this));
+        liftTalents.Add(35, sharingLight = new SharingLight(sharingLightIcon));
+        liftTalents.Add(50, lastWishes = new LastWishes(lastWishesIcon));
 
         view.InitMilestones();
         liftTalents.onLifted += (tal) => { view.UpdateMilestones(tal); };
@@ -119,10 +104,6 @@ public class AdProgression : MonoBehaviour
         Level++;
     }
 
-
-
-
-
     public class Inspiration : AdTalent
     {
         float mutation = 1.1f;
@@ -137,7 +118,7 @@ public class AdProgression : MonoBehaviour
             Followers._Inst.damage.chain.Add(5000, followersDamageMult);
 
             InitializeViewValues("Inspiration",
-                                 $"+{mutation-1f:P0} attack damage to hero and followers while scrying is on cooldown");
+                                 $"+{mutation-1f:P0} attack to Hero and Followers while scrying is on cooldown");
 
             buffIcon = inspirationIcon;
             buffIcon.gameObject.SetActive(false);
@@ -145,16 +126,21 @@ public class AdProgression : MonoBehaviour
 
         override protected void Connect()
         {
-            Advertisement.onWatched += StartBuff;
-            Advertisement.onReady += EndBuff;
+            AdCharges.onChargesChanged += CheckAdCharges;
+            CheckAdCharges();
         }
 
         override protected void Disconnect()
         {
-            Advertisement.onWatched -= StartBuff;
-            Advertisement.onReady -= EndBuff;
-            
+            AdCharges.onChargesChanged -= CheckAdCharges;
+
             EndBuff();
+        }
+
+        public void CheckAdCharges()
+        {
+            if (AdCharges.IsFull) EndBuff();
+            else StartBuff();
         }
 
 
@@ -178,7 +164,7 @@ public class AdProgression : MonoBehaviour
         public override string updatedDescription => throw new System.NotImplementedException();
     }
 
-    public class Vengence : AdTalent
+    public class Vengeance : AdTalent
     {
         float
             mutation = .5f,
@@ -191,7 +177,7 @@ public class AdProgression : MonoBehaviour
         Coroutine
             endBuffCoroutine;
 
-        public Vengence(Image vengenceIcon, MonoBehaviour parent) : base(Hero._Inst)
+        public Vengeance(Image vengenceIcon, MonoBehaviour parent) : base(Hero._Inst)
         {
             this.parent = parent;
 
@@ -219,7 +205,11 @@ public class AdProgression : MonoBehaviour
         {
             SoftReset.onReset -= StartBuff;
 
-            if (endBuffCoroutine != null) parent.StopCoroutine(endBuffCoroutine);
+            if (endBuffCoroutine != null)
+            {
+                parent.StopCoroutine(endBuffCoroutine);
+                endBuffCoroutine = null;
+            }
 
             EndBuff();
         }
@@ -230,16 +220,22 @@ public class AdProgression : MonoBehaviour
             heroAttspeedMult.Mutation = mutation;
             followersAttspeedMult.Mutation = mutation;
 
+            if (endBuffCoroutine != null)
+                parent.StopCoroutine(endBuffCoroutine);
+
             endBuffCoroutine = parent.StartCoroutine(CoroutineExtension.InvokeAfter(EndBuff, duration));
 
             buffIcon.gameObject.SetActive(true);
         }
+
         private void EndBuff()
         {
             heroAttspeedMult.Mutation = 1f;
             followersAttspeedMult.Mutation = 1f;
 
             buffIcon.gameObject.SetActive(false);
+
+            endBuffCoroutine = null;
         }
 
 
@@ -321,8 +317,10 @@ public class AdProgression : MonoBehaviour
     {
         float
             healthToShieldRatio = 1f,
-            degradationRatio = .25f,
+            degradationRatio = .3f,
             ratio;
+
+        BarrierShaderController shaderController ;
 
         public LastWishes(Image lastWishesIcon) : base(Hero._Inst)
         {
@@ -335,23 +333,32 @@ public class AdProgression : MonoBehaviour
             buffIcon = lastWishesIcon;
             buffIcon.gameObject.SetActive(false);
 
+            shaderController = GameObject.FindObjectOfType<BarrierShaderController>();
+
             RestoreBarrierRatio();
         }
 
         protected override void Connect()
         {
+            shaderController.StartBarrierUpdate();
             unit.followers.onDeathChain.Add(MakeBarrier);
-            SoftReset.onReset += RestoreBarrierRatio;
-            Hero._Inst.barrierRange.onLessThanZero += ()=>{ HeroView._Inst.ShowBarrier(false); };
             buffIcon.gameObject.SetActive(true);
+
+            SoftReset.onReset += RestoreBarrierRatio;
+            Hero._Inst.barrierRange.onLessThanZero += HideBarrier;
         }
 
         protected override void Disconnect()
         {
             unit.followers.onDeathChain.Remove(MakeBarrier);
             SoftReset.onReset -= RestoreBarrierRatio;
-            Hero._Inst.barrierRange.onLessThanZero -= () =>{ HeroView._Inst.ShowBarrier(false); };
+            Hero._Inst.barrierRange.onLessThanZero -= HideBarrier;
             buffIcon.gameObject.SetActive(false);
+        }
+
+        void HideBarrier()
+        {
+            HeroView._Inst.ShowBarrier(false);
         }
 
 
@@ -359,9 +366,10 @@ public class AdProgression : MonoBehaviour
         {
             if (ratio <= 0) return;
 
+            shaderController.ResetTime();
             HeroView._Inst.ShowBarrier(true);
 
-            float barrierCapacity = followers.healthRange._Max* ratio;
+            float barrierCapacity = followers.healthRange._Max * ratio;
 
             unit.barrierRange.Reinitialize(barrierCapacity);
 
@@ -380,15 +388,15 @@ public class AdProgression : MonoBehaviour
 [JsonObjectAttribute(MemberSerialization.OptIn)]
 abstract public class AdTalent : Talent, ILifted
     {
-        protected Image buffIcon;
+        public Image buffIcon;
 
         public AdTalent(Unit unit) : base(unit){}
 
         public override string updatedDescription => throw new NotImplementedException();
 
 
-    public string realDescription, hiddenDescription;
-        public void InitializeViewValues(string name, string description)
+        public string realDescription, hiddenDescription;
+        new public void InitializeViewValues(string name, string description)
         {
             this.name = name;
 
@@ -397,19 +405,19 @@ abstract public class AdTalent : Talent, ILifted
             hiddenDescription = realDescription.HideString();
 
             base.description = hiddenDescription;
-    }
-
-    public int floor { get; set; }
-    bool _islifted;
-    [JsonPropertyAttribute]
-    public bool isLifted
-    { get => _islifted; set
-        {
-            _islifted = value;
-
-            if (_islifted) OnLifted();
         }
-    }
+
+        public int floor { get; set; }
+        bool _islifted;
+        [JsonPropertyAttribute]
+        public bool isLifted
+        { get => _islifted; set
+            {
+                _islifted = value;
+
+                if (_islifted) OnLifted();
+            }
+        }
 
         public void OnLifted()
         {

@@ -13,6 +13,7 @@ abstract public class UnitView<TUnit> : MonoBehaviour
 
     [SerializeField] protected Text healthText;
     [SerializeField] FloatingTextMaker damageText;
+    [SerializeField] MorfText morfText;
 
     protected TUnit unit;
 
@@ -34,14 +35,20 @@ abstract public class UnitView<TUnit> : MonoBehaviour
                 if (dargs.isReflected) col = Color.blue;
                 else if (dargs.isBlindingLight) col = Color.yellow;
                 else if (dargs.isDoom) col = Color.magenta;
-                else if (dargs.isDiversion) col = new Color(.5f, .1f, .1f);
+                else if (dargs.isDiversion) col = new Color(.6f, .4f, .4f);
                 else if (dargs.isHotHanded) col = new Color(1f, 0.2f, 0.2f);
-                else if (dargs.IsSimpleAttack) col = Color.red;
+                else if (dargs.IsSimpleAttack || dargs.isInterrupted) col = Color.red;
                 else col = Color.black;
+
+                if (dargs.isCritical)
+                    morfText.SetBigFontsize();
+                else
+                    morfText.SetNormalFontsize();
+
 
                 string str = FloatExt.BeautifulFormatSigned(-dargs.damage._Val);
 
-                damageText.SpawnText(str, col);
+                morfText.Morf(str, col);
             };
 
         unit.onTakeHeal +=
@@ -50,9 +57,11 @@ abstract public class UnitView<TUnit> : MonoBehaviour
 
                 Color col = Color.green;
 
+                morfText.SetNormalFontsize();
+
                 string str = FloatExt.BeautifulFormatSigned(hargs.heal);
 
-                damageText.SpawnText(str, col);
+                morfText.Morf(str, col);
             };
 
         unit.healthRange.onRatioChanged += UpdateHealthBar;

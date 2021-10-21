@@ -7,10 +7,14 @@ public class FloatingTextMaker : MonoBehaviour
 
     [SerializeField] public Vector3 direction;
     [SerializeField] public float speed;
+    [SerializeField] public int normalFontsize;
 
     float textHeight;
 
     Pool<FloatingText> myPool;
+    int
+        fontsize,
+        bigFontsize;
 
     void Awake()
     {
@@ -26,7 +30,9 @@ public class FloatingTextMaker : MonoBehaviour
             ft.transform.localScale = Vector3.one;
 
         };
-        textHeight = preFloatingText.GetComponent<RectTransform>().sizeDelta.y * ReferenceHeap.canvasScale;
+
+        fontsize = normalFontsize;
+        bigFontsize = (int)(normalFontsize * 1.5f);
     }
 
     void Start()
@@ -43,15 +49,28 @@ public class FloatingTextMaker : MonoBehaviour
         SpawnText(text, Color.red);
     }
 
+    public void SetBigFontsize()
+    {
+        fontsize = bigFontsize;
+    }
+    public void SetNormalFontsize()
+    {
+        fontsize = normalFontsize;
+    }
 
     public void SpawnText(string text, Color color)
     {
-        Vector3 offset = myPool.activeNumber * textHeight * -direction ;
+        var ft = myPool.AcquireAndParent(transform);
 
-        var ft = myPool.AcquireAndPlace(transform, transform.position + offset, Quaternion.identity);
+        textHeight = ft.text.fontSize * transform.localScale.y;
+
+        Vector3 offset = myPool.activeNumber * textHeight * -direction;
+
 
         ft.SetText(text);
+        ft.transform.localPosition = offset;
         ft.text.color = color;
+        ft.text.fontSize = fontsize;
         ft.velocity = direction * speed;
     }
 }

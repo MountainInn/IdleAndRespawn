@@ -33,7 +33,7 @@ public class HeroView : UnitView<Hero>
 
     void UpdateBarrierView(float ratio)
     {
-        ratio = 1 - ratio;
+        ratio = Mathf.Clamp( 1 - ratio, .01f, .99f );
         leftBarrier.SetFloat(fillID, ratio);
         rightBarrier.SetFloat(fillID, ratio);
     }

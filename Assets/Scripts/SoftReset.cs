@@ -10,19 +10,30 @@ public class SoftReset : MonoBehaviour
     static public SoftReset _Inst;
     static public Action
         reset, reincarnation,
-        onReset, onReincarnation;
+        onReset, onReincarnation,
+        onRespawnCountChanged;
 
     static public Action<int>
         onMaxStageChanged;
 
     static public float respawnDuration = 1f;
 
-    [JsonPropertyAttribute] static public int respawnCount = 0;
+    [JsonPropertyAttribute] static public int respawnCount
+    {
+        get => _Inst._respawnCount;
+        set
+        {
+            _Inst._respawnCount = value;
+
+            onRespawnCountChanged?.Invoke();
+        }
+    }
+    int _respawnCount;
 
     [JsonPropertyAttribute] static public DateTime lastRespawn;
 
     [JsonPropertyAttribute]
-    static public int maxStage = 1, lastStage = 1;
+    static public int maxStage = 1, lastStage = 1, stageAcum = 0;
 
 
     [OnDeserializedAttribute]
@@ -62,7 +73,7 @@ public class SoftReset : MonoBehaviour
 
         reincarnation = ()=>
         {
-            Boss._Inst._StageNumber =
+            Boss.ResetStageToOne();
             lastStage =
                 maxStage = 1;
 
@@ -78,6 +89,8 @@ public class SoftReset : MonoBehaviour
 
 
             lastRespawn = DateTime.UtcNow;
+
+            Hero._Inst.frags++;
 
             onReset?.Invoke();
             onReincarnation?.Invoke();
@@ -105,7 +118,7 @@ public class SoftReset : MonoBehaviour
     {
         var talentPoints = Boss._Inst._StageNumber * 4;
 
-        Vault.talentPoints.Earn(talentPoints);
+        Vault.TalentPoints.Earn(talentPoints);
     }
 
     static public TimeSpan TimeSinceLastReset => DateTime.UtcNow.Subtract(lastRespawn);

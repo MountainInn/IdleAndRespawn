@@ -14,8 +14,6 @@ public partial class Unit
     public void TakeHeal(DoHealArgs healArgs)
     {
         takeHealChain.Invoke(healArgs);
-
-        onTakeHeal?.Invoke(healArgs);
     }
 }
 

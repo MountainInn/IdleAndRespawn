@@ -12,7 +12,7 @@ public partial class Boss
 	public int _StageNumber
 	{
 		get => stageNumber;
-		set
+		private set
 		{
 			stageNumber = value;
 			OnStageChanged();
@@ -83,7 +83,7 @@ public partial class Boss
 
 				healthSnapshot -= toNextStage;
 
-				_StageNumber++;
+				IncStage();
 
 				UpdateNextStageThreshold(healthSnapshot);
 			}
@@ -105,8 +105,20 @@ public partial class Boss
 		onTakeDamage.Invoke(dargs);
 	}
 
-	public void OnStageChanged()
+	void IncStage()
+    {
+        _StageNumber++;
+
+		SoftReset.stageAcum++;
+    }
+
+	static public void ResetStageToOne()
 	{
+		_Inst._StageNumber = 1;
+	}
+
+    public void OnStageChanged()
+    {
 		SoftReset.UpdateMaxStage();
 
 		onStageChanged?.Invoke(); ;
@@ -124,7 +136,7 @@ public partial class Boss
 
 	void UpdateStageMult()
 	{
-		stageMult = 1 + _StageNumber * Mathf.Log(_StageNumber + 2, 10);
+		stageMult = 1 + _StageNumber * Mathf.Log(_StageNumber + 2, 3);
 
 		damageMult.Mutation =
 			 armorMult.Mutation =

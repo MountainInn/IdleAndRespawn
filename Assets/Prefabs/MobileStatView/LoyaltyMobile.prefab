@@ -1,0 +1,188 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &8520994979715237030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3801460945759454940}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c581aabc44e1bfe4081c63e6b9caca5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _statName: Loyalty
+  _description: Increases Followers' health and armor
+  statColor: {r: 0.8352942, g: 0.8588236, b: 0.7843138, a: 1}
+--- !u!1001 &6362429141486157788
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4487120973834764401, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: upgradeName
+      value: loyalty
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172617166332300, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_Text
+      value: Loyalty
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172617283491688, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: fad877f5ee445374bab32659c024df16, type: 3}
+    - target: {fileID: 7821172617283491688, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_PreserveAspect
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172617283491691, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: -95.0889
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172617283491691, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: -104.62
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172617283491691, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -4.0429
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481088, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_Name
+      value: LoyaltyMobile
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 160
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 160
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -29
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -211
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618511481089, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7821172618528330976, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 89a635fe274e1654888600202921969b, type: 3}
+    - target: {fileID: 8019633471946864915, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: statName
+      value: Loyalty
+      objectReference: {fileID: 0}
+    - target: {fileID: 8019633471946864915, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: description
+      value: Increases Followers' health & armor
+      objectReference: {fileID: 0}
+    - target: {fileID: 8019633471946864915, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: statColor.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8019633471946864915, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: statColor.b
+      value: 0.7372549
+      objectReference: {fileID: 0}
+    - target: {fileID: 8019633471946864915, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: statColor.g
+      value: 0.9450981
+      objectReference: {fileID: 0}
+    - target: {fileID: 8019633471946864915, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: statColor.r
+      value: 0.94117653
+      objectReference: {fileID: 0}
+    - target: {fileID: 8861787012638725231, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_Color.b
+      value: 0.73333335
+      objectReference: {fileID: 0}
+    - target: {fileID: 8861787012638725231, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_Color.g
+      value: 0.9294118
+      objectReference: {fileID: 0}
+    - target: {fileID: 8861787012638725231, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+      propertyPath: m_Color.r
+      value: 0.92549026
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 8019633471946864915, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+  m_SourcePrefab: {fileID: 100100000, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+--- !u!1 &3801460945759454940 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7821172618511481088, guid: 1fc7405a4d358fc4faf00e7041490659, type: 3}
+  m_PrefabInstance: {fileID: 6362429141486157788}
+  m_PrefabAsset: {fileID: 0}

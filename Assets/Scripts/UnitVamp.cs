@@ -11,7 +11,7 @@ public partial class Unit
     {
         float vampHeal = damageArgs.attacker.vampirism.Result * damageArgs.damage._Val;
 
-        vampHeal = Mathf.Max(vampHeal, 1f);
+        vampHeal = Mathf.Clamp(vampHeal, 1f, healthRange._Max * .1f);
 
         var vampArgs = new DoHealArgs(this, vampHeal){ isVamp = true };
 

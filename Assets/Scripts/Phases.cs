@@ -22,47 +22,48 @@ public class Phases : MonoBehaviour
     }
 
     [JsonPropertyAttribute]
-    public Lift<Lifted> liftTalents;
+    public Lift<Lifted> lifts;
+    [JsonPropertyAttribute]
     public List<Talent> allTalents;
 
     void Start()
     {
         allTalents = new List<Talent>();
 
-        liftTalents  = new Lift<Lifted>();
-        AddStage(0, 005, new FullBlood(hero));
-        AddStage(0, 023, new Block(hero));
-        AddStage(0, 034, new Ressurection(hero));
-        AddStage(0, 045, new BattleExpirience(hero));
-        AddStage(0, 070, new Interruption(hero));
-        AddStage(0, 100, new TitansGrowth(hero));
-        AddStage(0, 101, new StaminaTraining(followers));
-        AddStage(0, 150, new BlindingLight(hero));
-        AddStage(0, 160, new Blitz());
-        AddStage(0, 190, new Regeneration(hero));
-        AddStage(0, 230, new CoordinatedActions(followers));
-        AddStage(0, 270, new Diversion(followers));
-        AddStage(0, 300, new EnfeeblingStrike(hero));
-        AddStage(0, 320, new CounterAttack(hero));
-        AddStage(0, 360, new Rebirth(hero));
-        AddStage(0, 400, new Transfusion());
-        AddStage(0, 450, new Infirmary(followers));
-        AddStage(0, 470, new Multicrit(hero));
-        AddStage(0, 530, new VeteransOfThirdWar());
-        AddStage(0, 560, new Cyclone(hero));
-        AddStage(0, 600, new CounterAttack(hero));
-        AddStage(0, 650, new HotHand(hero));
-        AddStage(0, 700, new Dejavu(hero));
+        lifts  = new Lift<Lifted>();
+        AddStage(0, 004, new BloodHunger(hero));
+        AddStage(0, 010, new Block(hero));
+        AddStage(0, 020, new BattleExpirience(hero));
+        AddStage(0, 030, new Cyclone(hero));
+        AddStage(0, 080, new Ressurection(hero));
+        AddStage(0, 110, new Blitz());
+        AddStage(0, 150, new EnfeeblingStrike(hero));
+        AddStage(0, 200, new Interruption(hero));
+        AddStage(0, 240, new Rebirth(hero));
+        AddStage(0, 280, new Salvation());
+        AddStage(0, 320, new TitansGrowth(hero));
+        AddStage(0, 420, new BlindingLight(hero));
+        AddStage(0, 460, new VeteransOfThirdWar());
+        AddStage(0, 500, new Transfusion());
+        AddStage(0, 550, new Dejavu(hero));
+        AddStage(0, 780, new CounterAttack(hero));
+
+        // AddStage(0, 170, new CoordinatedActions(followers));
+        // AddStage(0, 330, new Multicrit(hero));
+        // AddStage(0, 650, new HotHand(hero));
 
         foreach (var item in TalentView.instances)
         {
             item.gameObject.SetActive(false);
         }
 
-        SoftReset.onMaxStageChanged += (stage)=> CheckFloors();
-        Hero.onFragsUpdated += (frags) => CheckFloors();
-
-        CheckFloors();
+        SaveSystem.onAfterLoad += OnAfterLoaded;
+        void OnAfterLoaded()
+        {
+            SoftReset.onMaxStageChanged += (stage)=> CheckFloors();
+            Hero.onFragsUpdated += (frags) => CheckFloors();
+            SaveSystem.onAfterLoad -= OnAfterLoaded;
+        }
     }
 
     static void AddStage(int reincarnation, int stage, Talent tal)
@@ -73,7 +74,7 @@ public class Phases : MonoBehaviour
 
         int floor = MakeFloor(reincarnation,  stage);
 
-        _Inst.liftTalents.Add(floor, tal.lifted);
+        _Inst.lifts.Add(floor, tal.lifted);
     }
 
     static int MakeFloor(int reincarnation, int stage)
@@ -81,7 +82,7 @@ public class Phases : MonoBehaviour
 
     void CheckFloors()
     {
-        liftTalents.CheckFloors(
+        lifts.CheckFloors(
             MakeFloor(Hero._Inst.frags, SoftReset.maxStage));
     }
 }

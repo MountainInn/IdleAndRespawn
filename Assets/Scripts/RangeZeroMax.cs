@@ -77,6 +77,10 @@ public class Range
     }
     public void UpgradeMax(float newMax)
     {
+        _Max = newMax;
+    }
+    public void UpgradeMaxWithValRestoration(float newMax)
+    {
         float difference = newMax - _Max;
 
         _Max = newMax;

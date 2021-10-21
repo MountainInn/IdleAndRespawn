@@ -7,7 +7,93 @@ using UnityEditor;
 using System.Reflection;
 using System.Linq;
 using UnityEngine.EventSystems;
+public static class RendererExtensions
+{
+    public static bool IsFullyVisibleFrom_Optimized(this RectTransform rectTransform, Camera camera)
+    {
+        Rect screenBounds = new Rect(0f, 0f, Screen.width, Screen.height); // Screen space bounds (assumes camera renders across the entire screen)
+        Vector3[] objectCorners = new Vector3[4];
+        rectTransform.GetWorldCorners(objectCorners);
 
+        objectCorners[0] = camera.WorldToScreenPoint(objectCorners[0]) + new Vector3(10, 10);
+        objectCorners[1] = camera.WorldToScreenPoint(objectCorners[1]) + new Vector3(10, -10);
+        objectCorners[2] = camera.WorldToScreenPoint(objectCorners[2]) + new Vector3(-10, -10);
+        objectCorners[3] = camera.WorldToScreenPoint(objectCorners[3]) + new Vector3(-10, 10);
+
+        for (var i = 0; i < objectCorners.Length; i++) // For each corner in rectTransform
+        {
+            if (!screenBounds.Contains(objectCorners[i]))
+                return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Determines if this RectTransform is fully visible from the specified camera.
+    /// Works by checking if each bounding box corner of this RectTransform is inside the cameras screen space view frustrum.
+    /// </summary>
+    /// <returns><c>true</c> if is fully visible from the specified camera; otherwise, <c>false</c>.</returns>
+    /// <param name="rectTransform">Rect transform.</param>
+    /// <param name="camera">Camera.</param>
+    public static bool IsFullyVisibleFrom(this RectTransform rectTransform, Camera camera)
+    {
+        return CountCornersVisibleFrom(rectTransform, camera) == 4; // True if all 4 corners are visible
+    }
+
+    /// <summary>
+    /// Determines if this RectTransform is at least partially visible from the specified camera.
+    /// Works by checking if any bounding box corner of this RectTransform is inside the cameras screen space view frustrum.
+    /// </summary>
+    /// <returns><c>true</c> if is at least partially visible from the specified camera; otherwise, <c>false</c>.</returns>
+    /// <param name="rectTransform">Rect transform.</param>
+    /// <param name="camera">Camera.</param>
+    public static bool IsVisibleFrom(this RectTransform rectTransform, Camera camera)
+    {
+        return CountCornersVisibleFrom(rectTransform, camera) > 0; // True if any corners are visible
+    }
+
+    /// <summary>
+    /// Counts the bounding box corners of the given RectTransform that are visible from the given Camera in screen space.
+    /// </summary>
+    /// <returns>The amount of bounding box corners that are visible from the Camera.</returns>
+    /// <param name="rectTransform">Rect transform.</param>
+    /// <param name="camera">Camera.</param>
+    private static int CountCornersVisibleFrom(this RectTransform rectTransform, Camera camera)
+    {
+        Rect screenBounds = new Rect(0f, 0f, Screen.width, Screen.height); // Screen space bounds (assumes camera renders across the entire screen)
+        Vector3[] objectCorners = new Vector3[4];
+        rectTransform.GetWorldCorners(objectCorners);
+
+        int visibleCorners = 0;
+        Vector3 tempScreenSpaceCorner; // Cached
+        for (var i = 0; i < objectCorners.Length; i++) // For each corner in rectTransform
+        {
+            tempScreenSpaceCorner = camera.WorldToScreenPoint(objectCorners[i]); // Transform world space position of corner to screen space
+
+            if (tempScreenSpaceCorner.x == screenBounds.xMax) tempScreenSpaceCorner.x -= 1;
+            else if (tempScreenSpaceCorner.x == screenBounds.xMin) tempScreenSpaceCorner.x += 1;
+
+            if (tempScreenSpaceCorner.y == screenBounds.yMax) tempScreenSpaceCorner.y -= 1;
+            else if (tempScreenSpaceCorner.y == screenBounds.yMin) tempScreenSpaceCorner.y += 1;
+
+
+            if (screenBounds.Contains(tempScreenSpaceCorner)) // If the corner is inside the screen
+            {
+                visibleCorners++;
+            }
+        }
+        return visibleCorners;
+    }
+
+}
+
+public static class MonoBehaviourExtension
+{
+    public static Coroutine StartInvokeAfter(this MonoBehaviour mono, Action action, float seconds)
+    {
+        return mono.StartCoroutine(CoroutineExtension.InvokeAfter( action,  seconds));
+    }
+}
 
 public static class CoroutineExtension
 {
@@ -23,9 +109,23 @@ public static class CoroutineExtension
 
 public static class TimespanExtension
 {
+    public static string ToStringFormattedWithDays(this TimeSpan ts)
+    {
+        return $"{ts.Days:###0} days {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}";
+    }
     public static string ToStringFormatted(this TimeSpan ts)
     {
         return $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}";
+    }
+}
+public static class IntExt
+{
+    static public string ToStringFormatted(this int n)
+    {
+        return
+            (n <= 9_999_999f)
+            ? n.ToString("#,###,##0")
+            : n.ToString("0.00e0##");
     }
 }
 
@@ -36,7 +136,7 @@ public static class FloatExt
         return
             (n <= 9_999_999f)
             ? n.ToString("#,###,##0")
-            : n.ToString("0.00e##0");
+            : n.ToString("0.00e0##");
     }
 
     static public string BeautifulFormat(float number)
@@ -94,6 +194,16 @@ static public class EventTriggerExtensions
 
 static public class GameObjectExtensions
 {
+    static public IEnumerable<T> AllImmediateChildrenOfType<T>(this Transform transform)
+    {
+        for (int i = 0; i < transform.childCount; i ++)
+        {
+            var item = transform.GetChild(i).GetComponent<T>();
+
+            if (item != null) yield return item;
+        }
+    }
+
     static public T AddGetComponent<T>(this GameObject go) where T : Component
     {
         var component = go.GetComponent<T>();
@@ -107,6 +217,27 @@ static public class GameObjectExtensions
 
 static public class ListExtensions
 {
+    static public void FitToSize<T>(this List<T> list,  int count)
+    {
+        int currentSize = list.Count;
+        int diff = currentSize - count;
+
+        if (diff > 0)           // Too much actives
+        {
+            for(int i = currentSize-1; i >= count; i--)
+            {
+                list.RemoveAt(i);
+            }
+        }
+        else if (diff < 0)
+        {
+            for(int i = 0; i < Mathf.Abs(diff); i++)
+            {
+                list.Add(default);
+            }
+        }
+    }
+
     static public T GetRandom<T>(this List<T> list)
     {
         int id = UnityEngine.Random.Range(0, list.Count);
@@ -243,6 +374,9 @@ static public class ColorExt
 }
 static public class Vector2Ext
 {
+    static public Vector2 SetX(this Vector2 v, float x) => new Vector2(x, v.y);
+    static public Vector2 SetY(this Vector2 v, float y) => new Vector2(v.x, y);
+
     static public Vector3 ProjectToXZPlane(this Vector2 v)
     {
         return new Vector3(v.x, 0, v.y);

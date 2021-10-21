@@ -2,8 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using UnityEngine.EventSystems;
 
 
@@ -61,7 +59,7 @@ public class TalentView : ViewClass
 
 
 
-        Vault.talentPoints.onChanged_Amount += updateOnCurrencyChanged;
+        Vault.TalentPoints.onChanged_Amount += updateOnCurrencyChanged;
 
         gameObject.SetActive(true);
     }
@@ -96,9 +94,9 @@ public class TalentView : ViewClass
 
     public abstract class State : ViewState
     {
-        new public TalentView view;
+        public TalentView view;
 
-        public State(TalentView view) : base(view)
+        public State(TalentView view)
         {
             this.view = view;
         }
@@ -220,4 +218,3 @@ public class TalentView : ViewClass
     }
 
 }
-

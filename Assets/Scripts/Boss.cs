@@ -39,7 +39,6 @@ public partial class Boss : Unit
 
         onTakeDamage +=
             (args) =>{
-                BattleExpiriense.MakeExpiriense(args);
                 PutUpShield(args);
             };
 
@@ -52,6 +51,9 @@ public partial class Boss : Unit
         SoftReset.onReset += ()=>{ ShieldHide(); };
 
         onDeathChain.Add(100, (unit)=>{ SoftReset.reincarnation.Invoke(); });
+
+
+        new CriticalHit(this);
 
     }
 
@@ -71,7 +73,7 @@ public partial class Boss : Unit
     static public Action onBossRespawned;
     new public IEnumerator OnDeath()
     {
-        var wait = new WaitForSeconds(SoftReset.respawnDuration / 2);
+        var wait = new WaitForSeconds(SoftReset.respawnDuration / 2 / Time.timeScale);
 
         ableToFight = false;
 
@@ -104,19 +106,18 @@ public partial class Boss : Unit
 
     override protected void FirstInitStats()
     {
-        damage = new StatMultChain(// 2.1f
-
-            60
+        damage = new StatMultChain(
+            50
             , 0, 0);
 
-        attackSpeed = new StatMultChain(3, 0, 0){ isPercentage = true };
+        attackSpeed = new StatMultChain(2.2f, 0, 0){ isPercentage = true };
 
-        critChance = new StatMultChain(.00f, 0.0f, 500){ isPercentage = true };
+        critChance = new StatMultChain(.0f, 0.0f, 500){ isPercentage = true };
 
         critMult = new StatMultChain(1.5f, .01f, 500){ isPercentage = true };
 
         armor = new StatMultChain(
-        2
+        4f
         , 0, 0);
 
         InitHealth(1e6f, 0, 0);

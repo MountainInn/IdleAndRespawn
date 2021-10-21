@@ -40,6 +40,7 @@ public class Lift<T> where T : ILifted
 			foreach (var item in AllNotLifted(checkFloor))
 			{
 				item.Value.isLifted = true;
+				item.Value.OnLifted();
 				onLifted?.Invoke(item.Value);
 			}
 

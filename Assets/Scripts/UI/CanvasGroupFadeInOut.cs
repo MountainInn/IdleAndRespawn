@@ -38,6 +38,13 @@ public class CanvasGroupFadeInOut : MonoBehaviour
         canvasGroup.interactable = false;
 
     }
+    public void OutImmediate()
+    {
+        if (affectBlocksRaycast) canvasGroup.blocksRaycasts = false;
+        canvasGroup.interactable = false;
+        canvasGroup.alpha = 0f;
+        visible = false;
+    }
     public IEnumerator FadingOut()
     {
             while (canvasGroup.alpha > 0)
@@ -71,5 +78,13 @@ public class CanvasGroupFadeInOut : MonoBehaviour
 
             visible = true;
         }
+    }
+
+    public void InImmediate()
+    {
+        if (affectBlocksRaycast) canvasGroup.blocksRaycasts = true;
+        canvasGroup.interactable = true;
+        canvasGroup.alpha = 1f;
+        visible = true;
     }
 }

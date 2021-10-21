@@ -8,7 +8,7 @@ public class SoulshardIncome : MonoBehaviour
     {
        if (second.Tick())
        {
-           Vault.soulEnergy.Earn(Vault.soulshard._Val);
+           Vault.SoulEnergy.Earn(Vault.Soulshard._Val);
        }
     }
 }

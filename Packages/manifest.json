@@ -1,14 +1,13 @@
 {
   "dependencies": {
     "com.coffee.unmask": "https://github.com/mob-sakai/UnmaskForUGUI.git",
-    "com.leopotam.ecs": "https://github.com/Leopotam/ecs.git",
-    "com.leopotam.ecs-unityintegration": "https://github.com/Leopotam/ecs-unityintegration.git",
     "com.unity.2d.animation": "5.0.6",
     "com.unity.2d.pixel-perfect": "4.0.1",
     "com.unity.2d.psdimporter": "4.1.0",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.spriteshape": "5.1.4",
     "com.unity.2d.tilemap": "1.0.0",
+    "com.unity.ads": "3.7.5",
     "com.unity.burst": "1.4.8",
     "com.unity.collab-proxy": "1.7.1",
     "com.unity.ide.rider": "2.0.7",

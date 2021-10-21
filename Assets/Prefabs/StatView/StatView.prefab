@@ -35,7 +35,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 107.3083, y: 72.3}
+  m_SizeDelta: {x: 127.46, y: 72.3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1250928206653965462
 CanvasRenderer:
@@ -111,8 +111,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 23.7, y: 37.3}
-  m_SizeDelta: {x: 62.4917, y: 52.4282}
+  m_AnchoredPosition: {x: 43.2, y: 58.3}
+  m_SizeDelta: {x: 76.7882, y: 77.9576}
   m_Pivot: {x: 1, y: 1}
 --- !u!222 &1796510785799505711
 CanvasRenderer:
@@ -351,8 +351,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.00025177002, y: -8.01}
-  m_SizeDelta: {x: 68.099, y: 68.1}
+  m_AnchoredPosition: {x: -0.00025177002, y: -17.6}
+  m_SizeDelta: {x: 120.33, y: 68.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1796510786575708561
 CanvasRenderer:
@@ -384,7 +384,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 29
+    m_FontSize: 38
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 2
@@ -463,7 +463,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 36
+    m_FontSize: 42
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 3
@@ -515,7 +515,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: -0.000045776367, y: -90}
-  m_SizeDelta: {x: 131.2952, y: 72.3}
+  m_SizeDelta: {x: 150, y: 75}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &412795799644675069
 CanvasRenderer:
@@ -624,7 +624,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 34
+    m_FontSize: 38
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 3
@@ -730,7 +730,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 34
+    m_FontSize: 38
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 3
@@ -749,6 +749,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 8122577279829014311}
     m_Modifications:
+    - target: {fileID: 2842567822235833458, guid: f0cf44ac3d764a748804843d26642739, type: 3}
+      propertyPath: m_Text
+      value: 1.00e32
+      objectReference: {fileID: 0}
     - target: {fileID: 2863934256438033791, guid: f0cf44ac3d764a748804843d26642739, type: 3}
       propertyPath: m_Name
       value: CostView

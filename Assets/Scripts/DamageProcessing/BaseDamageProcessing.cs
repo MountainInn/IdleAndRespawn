@@ -45,9 +45,14 @@ abstract public class DamageProcessing
 }
 
 
+[JsonObjectAttribute(MemberSerialization.OptIn)]
 public class LoyaltyStat : StatMultChain
 {
-    static public ArithmeticNode healthAddition, armorAddition;
+    static LoyaltyStat inst;
+    static public LoyaltyStat _Inst => inst;
+
+    [JsonPropertyAttribute]
+    public ArithmeticNode healthAddition, armorAddition;
 
     public LoyaltyStat(float initialValue, float valGrowth, float costGrowth) : base(initialValue, valGrowth, costGrowth)
     {
@@ -59,16 +64,27 @@ public class LoyaltyStat : StatMultChain
 
         onRecalculate += () =>{ healthAddition.Mutation = HealthToAdd(); };
         onRecalculate += () =>{ armorAddition.Mutation = ArmorToAdd(); };
+
+        inst = this;
     }
 
     float HealthToAdd() => Result * 300;
     float ArmorToAdd() => Result * 100;
 }
 
+[JsonObjectAttribute(MemberSerialization.OptIn)]
 public class PerseveranceStat : StatMultChain
 {
-    static public ArithmeticNode armorBonus, damageBonus;
+    static PerseveranceStat inst;
+    static public PerseveranceStat _Inst => inst;
 
+    [JsonPropertyAttribute]
+    public ArithmeticNode
+        armorBonus,
+        damageBonus,
+        healthBonus;
+
+    [JsonPropertyAttribute]
     public float mutation {protected set; get;}
 
     public PerseveranceStat(float initialValue, float valGrowth, float costGrowth) : base(initialValue, valGrowth, costGrowth)
@@ -81,20 +97,26 @@ public class PerseveranceStat : StatMultChain
         damageBonus = new ArithmeticNode(new ArithmMult(), mutation);
         Hero._Inst.damage.chain.Add(damageBonus);
 
+        healthBonus = ArithmeticNode.CreateMult();
+        Hero._Inst.health.chain.Add(healthBonus);
+
         onRecalculate += RecalculateMutation;
-        SoftReset.onReset += RecalculateMutation;
-        SoftReset.onReincarnation += RecalculateMutation;
+        Hero._Inst.onRespawned += RecalculateMutation;
 
         RecalculateMutation();
+
+        inst = this;
     }
 
     private void RecalculateMutation()
     {
-        float log = Mathf.Log(Result+1, 10)/5;
-        mutation = 1 + log;
+        float respawnLog = Mathf.Log(SoftReset.respawnCount+1, 10)/6f;
+        float levelLog = Mathf.Log(level+1, 10)/4f;
+        mutation = 1 + levelLog * respawnLog;
 
         armorBonus.Mutation = mutation;
         damageBonus.Mutation = mutation;
+        healthBonus.Mutation = mutation;
     }
 }
 
@@ -172,12 +194,18 @@ public class TakeHeal : DamageProcessing
 
     void TakeHeal_(DoHealArgs hargs)
     {
+        float fullHeal = hargs.heal;
+
         float missingHP = unit.healthRange._Max - unit.healthRange._Val;
 
         float nonOverheal = Mathf.Min(missingHP, hargs.heal);
 
         unit.AffectHP(nonOverheal);
 
-        hargs.heal -= nonOverheal;
+        hargs.heal = nonOverheal;
+        unit.onTakeHeal.Invoke(hargs);
+
+
+        hargs.heal = fullHeal - nonOverheal;
     }
 }

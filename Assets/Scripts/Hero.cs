@@ -29,9 +29,10 @@ public partial class Hero : Unit
     new public static List<Hero> _Instances = new List<Hero>();
 
     [OnDeserializedAttribute]
-    public void OnDeserialized(StreamingContext context)
+    new public void OnDeserialized(StreamingContext context)
     {
-        if (frags > 0) Vault.ActivateBossSoulsView();
+        base.OnDeserialized(context);
+        // if (frags > 0) Vault.ActivateBossSoulsView();
     }
 
     protected override void OnAwake()
@@ -60,9 +61,9 @@ public partial class Hero : Unit
 
     override protected void FirstInitStats()
     {
-        damage = new StatMultChain(35, 5, 100);
+        damage = new StatMultChain(36, 6, 200);
 
-        attackSpeed = new StatMultChain(1, 0, 0){isPercentage = true};
+        attackSpeed = new StatMultChain(1.5f, 0, 0){isPercentage = true};
 
         critChance = new StatMultChain(.05f, 0.01f, 400, limitVal:1f){ isPercentage = true };
 
@@ -70,19 +71,19 @@ public partial class Hero : Unit
 
         reflect = new StatMultChain(3, 3, 200);
 
-        armor = new StatMultChain(10, 8, 200);
+        armor = new StatMultChain(10, 8, 320);
 
-        InitHealth(500, 500, 350);
+        InitHealth(100, 200, 1000);
 
-        healing = new StatMultChain(20, 4, 100);
+        healing = new StatMultChain(20, 7, 340);
 
-        healSpeed = new StatMultChain(2, 0, 0);
+        healSpeed = new StatMultChain(2.1f, 0, 0);
 
-        vampirism = new StatMultChain(.1f, .035f, 800, limitVal:6f){ isPercentage = true };
+        vampirism = new StatMultChain(.1f, .035f, 800, limitVal:1.5f){ isPercentage = true };
 
-        perseverance = new PerseveranceStat(0, 1, 10_000);
+        perseverance = new PerseveranceStat(0, 1, 15_000);
 
-        loyalty = new LoyaltyStat(0, 1, 10_000);
+        loyalty = new LoyaltyStat(0, 1, 15_000);
     }
 
     public string StatsString() =>
@@ -94,4 +95,3 @@ public partial class Hero : Unit
 
 
 }
-
