@@ -15,7 +15,12 @@ public class AdsREInitializer : MonoBehaviour
 
     void Awake()
     {
-        AdsInitializer._Inst.InitializeAds();
+        AdsInitializer.onInitFailed += ()=>
+        {
+            StartReinitialization();
+        };
+
+        StartReinitialization();
     }
 
     public void StartReinitialization()
