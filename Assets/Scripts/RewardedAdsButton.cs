@@ -34,33 +34,29 @@ public class RewardedAdsButton : MonoBehaviour, IUnityAdsLoadListener, IUnityAds
 
     public void LoadAd()
     {
-        _showAdButton.interactable = false;
+        if (AdsInitializer.succesfulyInitialized)
+        {
+            _showAdButton.interactable = false;
 
-        AdsREInitializer._Inst.FullCheck(
-            ()=>{ Advertisement.Load(_adUnitId, this); },
-            ()=>{ MyOnUnityAdsFailedToLoad(); });
+            Advertisement.Load(_adUnitId, this);
+        }
     }
     public void OnUnityAdsAdLoaded(string adUnitId)
     {
-        Debug.Log("Ad Loaded: " + adUnitId);
-
-        if (adUnitId.Equals(_adUnitId))
-        {
-            ShowAd();;
-        }
+        ShowAd();;
     }
     public void OnUnityAdsFailedToLoad(string adUnitId, UnityAdsLoadError error, string message)
     {
         Debug.Log($"Error loading Ad Unit {adUnitId}: {error.ToString()} - {message}");
-
 
         MyOnUnityAdsFailedToLoad();
     }
     void MyOnUnityAdsFailedToLoad()
     {
         SwitchToGray();
+        watchAdButtonText.text = "Ads Failed To Load"; // Здесь можно 
 
-        AdsREInitializer._Inst.StartReinitialization();
+        // AdsREInitializer._Inst.StartReinitialization();
     }
 
     #endregion
@@ -74,8 +70,6 @@ public class RewardedAdsButton : MonoBehaviour, IUnityAdsLoadListener, IUnityAds
     {
         if (adUnitId.Equals(_adUnitId) &&  showCompletionState.Equals(UnityAdsShowCompletionState.COMPLETED))
         {
-            Debug.Log("Unity Ads Rewarded Ad Completed");
-
             MyOnUnityAdsShowComplete();
         }
     }
