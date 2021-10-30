@@ -33,6 +33,11 @@ abstract public class DamageProcessing
 
         Connect();
 
+        foreach (var button in thisType.GetFields(BindingFlags.Instance).OfType<UpgradeButton>() )
+        {
+            if ( button != null ) button.gameObject.SetActive(true);
+        }
+
     }
 
     protected virtual void Connect(){}

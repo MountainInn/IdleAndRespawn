@@ -9,12 +9,16 @@ public class Phases : MonoBehaviour
     public static Phases _Inst;
 
     static Hero hero;
+    static Boss boss;
+    static Followers followers;
 
     void Awake()
     {
         _Inst = this;
 
         hero = GameObject.FindObjectOfType<Hero>();
+        boss = GameObject.FindObjectOfType<Boss>();
+        followers = GameObject.FindObjectOfType<Followers>();
     }
 
     [JsonPropertyAttribute]
@@ -48,6 +52,10 @@ public class Phases : MonoBehaviour
         // AddStage(0, 330, new Multicrit(hero));
         // AddStage(0, 650, new HotHand(hero));
 
+        foreach (var item in TalentView.instances)
+        {
+            item.gameObject.SetActive(false);
+        }
 
         SaveSystem.onAfterLoad += OnAfterLoaded;
         void OnAfterLoaded()

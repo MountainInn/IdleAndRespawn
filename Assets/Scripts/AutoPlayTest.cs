@@ -11,6 +11,7 @@ public class AutoPlayTest : MonoBehaviour
     Timer autobuyTimer = new Timer(10);
     Timer statbuyTimer = new Timer(60 * 5);
 
+    List<Button.ButtonClickedEvent> buttonClickEvents = new List<Button.ButtonClickedEvent>();
     List<TalentStripView> talentBuys ;
     List<StatView> statBuys = new List<StatView>();
 
@@ -22,6 +23,9 @@ public class AutoPlayTest : MonoBehaviour
         ShoppingCart._BuyLevelQuantity = 1;
 
         autobuyTimer.T = autobuyTimer.endTime * .9f;
+
+        buttonClickEvents = new List<Button.ButtonClickedEvent>();
+        buttonClickEvents.AddRange(GameObject.FindObjectsOfType<UpgradeButton>().Select(up=>up.self.onClick));
 
         talentBuys = TalentStripView.instances.Where(tv=>tv.thisTalent != null).ToList();
         talentBuys.Sort(

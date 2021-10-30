@@ -32,6 +32,8 @@ public class Tutorial : MonoBehaviour
     Pool<RectTransform> unmasks;
 
 
+
+
     [OnDeserializedAttribute]
     public void OnDeserialized(StreamingContext context)
     {
