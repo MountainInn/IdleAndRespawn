@@ -20,7 +20,6 @@ public partial class Boss : Unit
 
 
     public int bossSoulsReward = 1;
-
     BossView view;
 
     protected override void OnAwake()

@@ -10,8 +10,8 @@ public partial class AdsInitializer : MonoBehaviour, IUnityAdsInitializationList
     static public AdsInitializer _Inst => inst??=GameObject.FindObjectOfType<AdsInitializer>();
 
     [SerializeField] string _androidGameId = "4382947";
-    [SerializeField] bool _testMode = true;
     [SerializeField] bool _enablePerPlacementMode = true;
+    bool _testMode = false;
     private string _gameId;
 
     static public Action

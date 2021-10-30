@@ -4608,7 +4608,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _androidGameId: 4382947
-  _testMode: 1
+  _testMode: 0
   _enablePerPlacementMode: 1
 --- !u!4 &679574525
 Transform:

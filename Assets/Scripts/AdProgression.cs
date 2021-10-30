@@ -78,6 +78,8 @@ public class AdProgression : MonoBehaviour
         InitMult();
 
         InitTalents();
+
+        view.UpdateLevel(Level);
     }
 
     private void InitTalents()
